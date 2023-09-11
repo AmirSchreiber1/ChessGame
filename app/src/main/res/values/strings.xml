@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">ChessGame</string>
+    <string name="play">Play</string>
+    <string name="change_username">Change Username</string>
+    <string name="welcome_msg">Welcome to</string>
+    <string name="set_the_clock">SET THE CLOCK</string>
+    <string name="clock_logo">clock_logo</string>
+    <string name="clock_time">Clock Time:</string>
+    <string name="unlimited">unlimited</string>
+    <string name="save_changes">Save Changes</string>
+    <string name="clock_symbol">y</string>
+    <string name="ten_minutes">10:00</string>
+    <string name="two_minutes">02:00</string>
+    <string name="sand_clock_symbol">E</string>
+    <string name="lightning_symbol">u</string>
+    <string name="five_minutes">05:00</string>
+    <string name="bullet_symbol"><![CDATA[<]]></string>
+    <string name="infinity_symbol">∞</string>
+    <string name="rapidClockTimeStr">Clock Time: 10:00</string>
+</resources>
