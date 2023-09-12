@@ -35,6 +35,11 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("currChoice", currChoice);
             startActivityForResult(intent, 2);
         });
+        playButton.setOnClickListener(view -> {
+            Intent intent = new Intent(this, GameActivity.class);
+            intent.putExtra("clockTimeChoice", currChoice);
+            startActivity(intent);
+        });
     }
 
     private void setFonts(){
