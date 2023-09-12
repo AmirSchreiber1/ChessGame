@@ -1,14 +1,17 @@
 package com.example.chessgame;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.media.Image;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
@@ -86,9 +89,11 @@ public class GameActivity extends AppCompatActivity {
                 // the square itself, without the chess piece, is an ImageView
                 ImageView square = new ImageView(this);
                 if ((row + col) % 2 == 0) {
-                    square.setBackgroundColor(getColor(R.color.light_green));
+                    Drawable lightSquareBg = ContextCompat.getDrawable(this, R.drawable.light_square);
+                    square.setBackground(lightSquareBg);
                 } else {
-                    square.setBackgroundColor(getColor(R.color.dark_green));
+                    Drawable darkSquareBg = ContextCompat.getDrawable(this, R.drawable.dark_square);
+                    square.setBackground(darkSquareBg);
                 }
                 fl.addView(square);
 
