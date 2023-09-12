@@ -53,7 +53,7 @@ public class GameActivity extends AppCompatActivity {
             }
             // When the task is over it will print 00:00:00 there
             public void onFinish() {
-                upperTimer.setText("00:00:00");
+                upperTimer.setText("00:00");
             }
         };
         CountDownTimer bottomCounter = new CountDownTimer(50000, 1000) {
@@ -66,7 +66,7 @@ public class GameActivity extends AppCompatActivity {
             }
             // When the task is over it will print 00:00:00 there
             public void onFinish() {
-                bottomTimer.setText("00:00:00");
+                bottomTimer.setText("00:00");
             }
         };
         upperCounter.start();
