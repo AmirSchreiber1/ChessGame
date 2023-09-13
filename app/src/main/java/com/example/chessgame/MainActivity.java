@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
         // check if the request code is same as what is passed  here it is 2
         if(requestCode==2)
         {
+            if (data == null) return;
             currChoice=data.getIntExtra("clockTimeChoice", 3);
             String clockTimeStr = null;
             switch(currChoice) {

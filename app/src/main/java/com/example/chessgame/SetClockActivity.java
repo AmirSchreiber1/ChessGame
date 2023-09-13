@@ -168,9 +168,6 @@ public class SetClockActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        Intent intent = new Intent();
-        intent.putExtra("clockTimeChoice", currChoice);
-        setResult(2, intent);
         super.onBackPressed();
     }
 }
