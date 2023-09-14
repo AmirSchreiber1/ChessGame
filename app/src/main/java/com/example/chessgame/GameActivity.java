@@ -24,7 +24,25 @@ import java.text.NumberFormat;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class GameActivity extends AppCompatActivity {
-    String[] colsToLetters = {"0", "a", "b", "c", "d", "e", "f", "g", "h"};
+    String[] colsToLetters = {"a", "b", "c", "d", "e", "f", "g", "h"};
+    String[][] startingBoardWhite =
+            {{"br","bn","bb","bq","bk","bb","bn","br"},
+            {"bp","bp","bp","bp","bp","bp","bp","bp"},
+            {"_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_"},
+            {"wp","wp","wp","wp","wp","wp","wp","wp"},
+            {"wr","wn","wb","wq","wk","wb","wn","wr"}};
+    String[][] startingBoardBlack =
+            {{"wr","wn","wb","wk","wq","wb","wn","wr"},
+            {"wp","wp","wp","wp","wp","wp","wp","wp"},
+            {"_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_"},
+            {"bp","bp","bp","bp","bp","bp","bp","bp"},
+            {"br","bn","bb","bk","bq","bb","bn","br"}};
     int clockTimeChoice;
     TextView upperTimer;
     TextView bottomTimer;
@@ -46,10 +64,10 @@ public class GameActivity extends AppCompatActivity {
         chessBoard = findViewById(R.id.chessBoard);
         isWhite = ThreadLocalRandom.current().nextInt(1, 2 + 1);
         if (isWhite == 1) {
-            setBoardWhite();
+            setBoard(startingBoardWhite);
         }
         else {
-            setBoardBlack();}
+            setBoard(startingBoardBlack);}
         setTimers();
     }
     private void setTimers(){
@@ -111,13 +129,16 @@ public class GameActivity extends AppCompatActivity {
                 bottomTimer.setText("00:00");
             }
         };
-        if (isWhite == 1) bottomCounter.start();
+        if (isWhite == 1) {
+            bottomCounter.start();
+            isBottomTurn = 1;
+        }
         else upperCounter.start();
     }
 
-    private void setBoardWhite(){
-        for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col++) {
+    private void setBoard(String[][] startingBoard){
+        for (int row = 0; row <= 7; row++) {
+            for (int col = 0; col <= 7; col++) {
                 // each square (including chess piece if any) is a FrameLayout (enabling stacking 2 views)
                 FrameLayout fl = new FrameLayout(this);
                 GridLayout.LayoutParams params = new GridLayout.LayoutParams();
@@ -140,9 +161,9 @@ public class GameActivity extends AppCompatActivity {
                 fl.addView(square);
 
                 //indexes (displayed via TextViews):
-                if (col == 1) {
+                if (col == 0) {
                     TextView index = new TextView(this);
-                    index.setText(String.valueOf(9-row));
+                    index.setText(String.valueOf(8-row));
                     index.setTextSize(12);
                     FrameLayout.LayoutParams indexParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
                     indexParams.setMargins(3,0,0,0);
@@ -150,207 +171,70 @@ public class GameActivity extends AppCompatActivity {
                     index.setLayoutParams(indexParams);
                     fl.addView(index);
                 }
-                if (row == 8) {
-                    TextView index = new TextView(this);
-                    index.setText(colsToLetters[col]);
-                    index.setTextSize(12);
-                    FrameLayout.LayoutParams indexParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-                    indexParams.setMargins(0,0,3,0);
-                    indexParams.gravity = Gravity.END | Gravity.BOTTOM;
-                    index.setLayoutParams(indexParams);
-                    fl.addView(index);
-                }
-
-                // the chess pieces are also ImageViews:
-                //pawns:
-                if (row == 2) {
-                    ImageView blackPawn = new ImageView(this);
-                    blackPawn.setImageResource(R.drawable.black_pawn);
-                    fl.addView(blackPawn);
-                }
-                if (row == 7){
-                    ImageView whitePawn = new ImageView(this);
-                    whitePawn.setImageResource(R.drawable.white_pawn);
-                    fl.addView(whitePawn);
-                }
-                //rooks:
-                if (row == 1 && (col == 1 || col == 8)) {
-                    ImageView blackRook = new ImageView(this);
-                    blackRook.setImageResource(R.drawable.black_rook);
-                    fl.addView(blackRook);
-                }
-                if (row == 8 && (col == 1 || col == 8)) {
-                    ImageView whiteRook = new ImageView(this);
-                    whiteRook.setImageResource(R.drawable.white_rook);
-                    fl.addView(whiteRook);
-                }
-                //knights:
-                if (row == 1 && (col == 2 || col == 7)) {
-                    ImageView blackKnight = new ImageView(this);
-                    blackKnight.setImageResource(R.drawable.black_knight);
-                    fl.addView(blackKnight);
-                }
-                if (row == 8 && (col == 2 || col == 7)) {
-                    ImageView whiteKnight = new ImageView(this);
-                    whiteKnight.setImageResource(R.drawable.white_knight);
-                    fl.addView(whiteKnight);
-                }
-                //bishops:
-                if (row == 1 && (col == 3 || col == 6)) {
-                    ImageView blackBishop = new ImageView(this);
-                    blackBishop.setImageResource(R.drawable.black_bishop);
-                    fl.addView(blackBishop);
-                }
-                if (row == 8 && (col == 3 || col == 6)) {
-                    ImageView whiteBishop = new ImageView(this);
-                    whiteBishop.setImageResource(R.drawable.white_bishop);
-                    fl.addView(whiteBishop);
-                }
-                //queens:
-                if (row == 1 && col == 4) {
-                    ImageView blackQueen = new ImageView(this);
-                    blackQueen.setImageResource(R.drawable.black_queen);
-                    fl.addView(blackQueen);
-                }
-                if (row == 8 && (col == 4)) {
-                    ImageView whiteQueen = new ImageView(this);
-                    whiteQueen.setImageResource(R.drawable.white_queen);
-                    fl.addView(whiteQueen);
-                }
-                //kings:
-                if (row == 1 && col == 5) {
-                    ImageView blackKing = new ImageView(this);
-                    blackKing.setImageResource(R.drawable.black_king);
-                    fl.addView(blackKing);
-                }
-                if (row == 8 && (col == 5)) {
-                    ImageView whiteKing = new ImageView(this);
-                    whiteKing.setImageResource(R.drawable.white_king);
-                    fl.addView(whiteKing);
-                }
-                //add the square with the piece to the gridLayout (generating the board that way):
-                chessBoard.addView(fl);
-            }
-        }
-    }
-
-    private void setBoardBlack(){
-        for (int row = 1; row <= 8; row++) {
-            for (int col = 1; col <= 8; col++) {
-                // each square (including chess piece if any) is a FrameLayout (enabling stacking 2 views)
-                FrameLayout fl = new FrameLayout(this);
-                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-                //each FrameLayout is 1row-1column sized in the GridLayout:
-                params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-                params.rowSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-                params.width = 0;
-                params.height = 0;
-                fl.setLayoutParams(params);
-
-                // the square itself, without the chess piece, is an ImageView
-                ImageView square = new ImageView(this);
-                if ((row + col) % 2 == 0) {
-                    Drawable lightSquareBg = ContextCompat.getDrawable(this, R.drawable.light_square);
-                    square.setBackground(lightSquareBg);
-                } else {
-                    Drawable darkSquareBg = ContextCompat.getDrawable(this, R.drawable.dark_square);
-                    square.setBackground(darkSquareBg);
-                }
-                fl.addView(square);
-
-                //indexes (displayed via TextViews):
-                if (col == 1) {
-                    TextView index = new TextView(this);
-                    index.setText(String.valueOf(9-row));
-                    index.setTextSize(12);
-                    FrameLayout.LayoutParams indexParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-                    indexParams.setMargins(3,0,0,0);
-                    indexParams.gravity = Gravity.START | Gravity.TOP;
-                    index.setLayoutParams(indexParams);
-                    fl.addView(index);
-                }
-                if (row == 8) {
-                    TextView index = new TextView(this);
-                    index.setText(colsToLetters[col]);
-                    index.setTextSize(12);
-                    FrameLayout.LayoutParams indexParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-                    indexParams.setMargins(0,0,3,0);
-                    indexParams.gravity = Gravity.END | Gravity.BOTTOM;
-                    index.setLayoutParams(indexParams);
-                    fl.addView(index);
-                }
-
-                // the chess pieces are also ImageViews:
-                //pawns:
                 if (row == 7) {
-                    ImageView blackPawn = new ImageView(this);
-                    blackPawn.setImageResource(R.drawable.black_pawn);
-                    fl.addView(blackPawn);
+                    TextView index = new TextView(this);
+                    index.setText(colsToLetters[col]);
+                    index.setTextSize(12);
+                    FrameLayout.LayoutParams indexParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
+                    indexParams.setMargins(0,0,3,0);
+                    indexParams.gravity = Gravity.END | Gravity.BOTTOM;
+                    index.setLayoutParams(indexParams);
+                    fl.addView(index);
                 }
-                if (row == 2){
-                    ImageView whitePawn = new ImageView(this);
-                    whitePawn.setImageResource(R.drawable.white_pawn);
-                    fl.addView(whitePawn);
+
+                // the chess pieces are ImageViews:
+                String squareContent = startingBoard[row][col];
+                if (!(squareContent.equals("_"))){
+                    ImageView chessPiece = getPieceFromString(squareContent);
+                    fl.addView(chessPiece);
                 }
-                //rooks:
-                if (row == 8 && (col == 1 || col == 8)) {
-                    ImageView blackRook = new ImageView(this);
-                    blackRook.setImageResource(R.drawable.black_rook);
-                    fl.addView(blackRook);
-                }
-                if (row == 1 && (col == 1 || col == 8)) {
-                    ImageView whiteRook = new ImageView(this);
-                    whiteRook.setImageResource(R.drawable.white_rook);
-                    fl.addView(whiteRook);
-                }
-                //knights:
-                if (row == 8 && (col == 2 || col == 7)) {
-                    ImageView blackKnight = new ImageView(this);
-                    blackKnight.setImageResource(R.drawable.black_knight);
-                    fl.addView(blackKnight);
-                }
-                if (row == 1 && (col == 2 || col == 7)) {
-                    ImageView whiteKnight = new ImageView(this);
-                    whiteKnight.setImageResource(R.drawable.white_knight);
-                    fl.addView(whiteKnight);
-                }
-                //bishops:
-                if (row == 8 && (col == 3 || col == 6)) {
-                    ImageView blackBishop = new ImageView(this);
-                    blackBishop.setImageResource(R.drawable.black_bishop);
-                    fl.addView(blackBishop);
-                }
-                if (row == 1 && (col == 3 || col == 6)) {
-                    ImageView whiteBishop = new ImageView(this);
-                    whiteBishop.setImageResource(R.drawable.white_bishop);
-                    fl.addView(whiteBishop);
-                }
-                //queens:
-                if (row == 8 && col == 4) {
-                    ImageView blackQueen = new ImageView(this);
-                    blackQueen.setImageResource(R.drawable.black_queen);
-                    fl.addView(blackQueen);
-                }
-                if (row == 1 && (col == 4)) {
-                    ImageView whiteQueen = new ImageView(this);
-                    whiteQueen.setImageResource(R.drawable.white_queen);
-                    fl.addView(whiteQueen);
-                }
-                //kings:
-                if (row == 8 && col == 5) {
-                    ImageView blackKing = new ImageView(this);
-                    blackKing.setImageResource(R.drawable.black_king);
-                    fl.addView(blackKing);
-                }
-                if (row == 1 && (col == 5)) {
-                    ImageView whiteKing = new ImageView(this);
-                    whiteKing.setImageResource(R.drawable.white_king);
-                    fl.addView(whiteKing);
-                }
+
                 //add the square with the piece to the gridLayout (generating the board that way):
                 chessBoard.addView(fl);
             }
         }
     }
 
+    private ImageView getPieceFromString(String squareContent) {
+        ImageView chessPiece = new ImageView(this);
+        switch(squareContent) {
+            case "br":
+                chessPiece.setImageResource(R.drawable.black_rook);
+                break;
+            case "bn":
+                chessPiece.setImageResource(R.drawable.black_knight);
+                break;
+            case "bb":
+                chessPiece.setImageResource(R.drawable.black_bishop);
+                break;
+            case "bq":
+                chessPiece.setImageResource(R.drawable.black_queen);
+                break;
+            case "bk":
+                chessPiece.setImageResource(R.drawable.black_king);
+                break;
+            case "bp":
+                chessPiece.setImageResource(R.drawable.black_pawn);
+                break;
+            case "wr":
+                chessPiece.setImageResource(R.drawable.white_rook);
+                break;
+            case "wn":
+                chessPiece.setImageResource(R.drawable.white_knight);
+                break;
+            case "wb":
+                chessPiece.setImageResource(R.drawable.white_bishop);
+                break;
+            case "wq":
+                chessPiece.setImageResource(R.drawable.white_queen);
+                break;
+            case "wk":
+                chessPiece.setImageResource(R.drawable.white_king);
+                break;
+            case "wp":
+                chessPiece.setImageResource(R.drawable.white_pawn);
+                break;
+        }
+        return chessPiece;
+    }
 }
