@@ -100,15 +100,22 @@ public class ChessProcessor {
         //check if own-"shakh" can occur due to possible move (bad scenario, invalid move)
         for (Square possibleSquare : squares) {
             String[][] possibleBoard = getBoardAfterPossibleMove(pressedSquare, possibleSquare);
-            if (isCreatingOwnCheck(possibleBoard, chessPiece.getColor())) {
+            if (isCreatingOwnCheck(possibleBoard, chessPiece.getColor(), possibleSquare)) {
                 possibleSquares.remove(possibleSquare);
             }
         }
         return possibleSquares;
     }
 
-    private boolean isCreatingOwnCheck(String[][] possibleBoard, char ownColor) {
-        for (ChessPiece cp : chessPieces) {
+    private boolean isCreatingOwnCheck(String[][] possibleBoard, char ownColor, Square possibleSquare) {
+        int possibleSquareRow = possibleSquare.getRow();
+        int possibleSquareCol = possibleSquare.getCol();
+        for (ChessPiece cp : chessPieces) { //cp is a piece probably being a threat and creating check on own king
+            int cpRow = cp.getCurrentSquare().getRow();
+            int cpCol = cp.getCurrentSquare().getCol();
+            if (cpRow == possibleSquareRow && cpCol == possibleSquareCol) {
+                continue; //no need to check for threat from possible "eaten" piece as it won't be a concern after the move
+            }
             if (cp.getColor() != ownColor) {
                 if (cp.isCheckingRivalKing(possibleBoard, ownColor)) {
                     return true;

@@ -1,5 +1,7 @@
 package com.example.chessgame;
 
+import androidx.annotation.Nullable;
+
 public class Square {
     private int row;
     private int col;
@@ -34,4 +36,9 @@ public class Square {
         this.isEmpty = isEmpty;
     }
 
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        Square square = (Square) obj;
+        return row == square.getRow() && col == square.getCol();
+    }
 }

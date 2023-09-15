@@ -258,34 +258,45 @@ public class GameActivity extends AppCompatActivity {
                 // fl is the frameLayout of the square just clicked
                 // (row, col) is the index of the square corresponding to the last click
                 if (currentlyPressed1.getRow() == -1) { //if no square is previously pressed:
-                    // if no chess-piece on the just-pressed square, or there is a piece of another color there, do nothing:
-                    if (this.board[row][col].equals("_") || board[row][col].charAt(0) != firstCharOfColor) {
+                    // if no chess-piece on the just-pressed square, no need to do anything.
+                    if (this.board[row][col].equals("_")) {
                         return;
+                    } else { //else, a square with a chess piece was chosen. color that square accordingly:
+                        currentlyPressed1.setRow(row);
+                        currentlyPressed1.setCol(col);
+                        fl.setBackground(pressedSquareBg);
+                        if (board[row][col].charAt(0) == firstCharOfColor) {
+                            //also, if that piece is of own color, highlight squares that piece can move to
+                            highlightPossibleSquares(new Square(row, col));
+                        }
                     }
-                    //else, no square is previously pressed and a square with a chess piece of the right color was just clicked, so choose it:
-                    currentlyPressed1.setRow(row);
-                    currentlyPressed1.setCol(col);
-                    fl.setBackground(pressedSquareBg);
-                    // after clicking on a chess-piece of the right color, we want to highlight the squares this piece can move to:
-                    highlightPossibleSquares(new Square(row, col));
-                } else if (currentlyPressed1.getRow() == row && currentlyPressed1.getCol() == col) { //if already-chosen square is pressed, un-choose it:
-                    setOriginalBackgroundByIndex(fl, row, col);
-                    currentlyPressed1.setRow(-1);
-                    currentlyPressed1.setCol(-1);
-                    //also, unhighlight previously-highlighted squares:
-                    unhighlightSquares();
+                } //else, a square with a chess piece was previously chosen:
+                else if (currentlyPressed1.getRow() == row && currentlyPressed1.getCol() == col) { //if already-chosen square is pressed, un-choose it:
+                    cleanChoice(fl, row, col);
                 } else { //if there is a chosen square and user chooses another one:
-                    // TODO if just pressed square is one of possible squares, move the previously chosen piece to that square (afterwards, change turn)
-                    // TODO otherwise, if there is a chess piece of the right color on the last just pressed square, change choice to that square
-                    // TODO else, cancel first choice
-                    // un-choose previously chosen square and then choose the new one:
-
-
-/*                    FrameLayout alreadyChosenSquare = (FrameLayout) chessBoard.getChildAt(currentlyPressed1[0]*8 + currentlyPressed1[1]);
-                    setOriginalBackgroundByIndex(alreadyChosenSquare, currentlyPressed1[0], currentlyPressed1[1]);
-                    fl.setBackground(pressedSquareBg);
-                    currentlyPressed1[0] = row;
-                    currentlyPressed1[1] = col;*/
+                    if (highlightedSquares.contains(new Square (row, col))) {
+                        currentlyPressed2.setRow(row);
+                        currentlyPressed2.setCol(col);
+                        fl.setBackground(pressedSquareBg);
+                        //TODO: update board visually and data-wise
+                    }
+                    // else, if an un-highlighted square with no chess-piece is chosen, clean previous choice:
+                    else if (this.board[row][col].equals("_")) {
+                        FrameLayout alreadyChosen_fl = (FrameLayout) chessBoard.getChildAt(currentlyPressed1.getRow()*8 + currentlyPressed1.getCol());
+                        cleanChoice(alreadyChosen_fl, currentlyPressed1.getRow(), currentlyPressed1.getCol());
+                    } //else, an un-highlighted square with chess piece was chosen:
+                    else { //if another piece is chosen, change choice:
+                        //clean previous choice:
+                        FrameLayout alreadyChosen_fl = (FrameLayout) chessBoard.getChildAt(currentlyPressed1.getRow()*8 + currentlyPressed1.getCol());
+                        cleanChoice(alreadyChosen_fl, currentlyPressed1.getRow(), currentlyPressed1.getCol());
+                        //choose new square:
+                        currentlyPressed1.setRow(row);
+                        currentlyPressed1.setCol(col);
+                        fl.setBackground(pressedSquareBg);
+                        if (board[row][col].charAt(0) == firstCharOfColor) {
+                            highlightPossibleSquares(new Square(row, col));
+                        }
+                    }
                 }
             }
         });
@@ -309,6 +320,15 @@ public class GameActivity extends AppCompatActivity {
             FrameLayout fl = (FrameLayout) chessBoard.getChildAt(i * 8 + j);
             fl.removeViewAt(0);
         }
+        highlightedSquares.clear();
+    }
+
+    private void cleanChoice(FrameLayout fl, int row, int col) {
+        setOriginalBackgroundByIndex(fl, row, col);
+        currentlyPressed1.setRow(-1);
+        currentlyPressed1.setCol(-1);
+        //also, unhighlight previously-highlighted squares
+        unhighlightSquares();
     }
 
     TextView createWhiteCircle(Square square) {
