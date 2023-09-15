@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
@@ -123,6 +124,7 @@ public class GameActivity extends AppCompatActivity {
                 upperTimer.setText(f.format(min) + ":" + f.format(sec));
             }
             public void onFinish() {
+                //TODO (user wins)
                 upperTimer.setText("00:00");
             }
         };
@@ -135,6 +137,7 @@ public class GameActivity extends AppCompatActivity {
                 bottomTimer.setText(f.format(min) + ":" + f.format(sec));
             }
             public void onFinish() {
+                //TODO (rival wins)
                 bottomTimer.setText("00:00");
             }
         };
@@ -189,6 +192,10 @@ public class GameActivity extends AppCompatActivity {
                     ImageView chessPiece = getPieceFromString(squareContent);
                     fl.addView(chessPiece);
                 }
+
+                // make sure the frameLayouts aren't blocking/hiding their children (the chess pieces):
+                fl.setClipChildren(false);
+                fl.setElevation(5f);
 
                 //add the square with the piece to the gridLayout (generating the board that way):
                 chessBoard.addView(fl);
@@ -278,7 +285,12 @@ public class GameActivity extends AppCompatActivity {
                         currentlyPressed2.setRow(row);
                         currentlyPressed2.setCol(col);
                         fl.setBackground(pressedSquareBg);
-                        //TODO: update board visually and data-wise
+                        unhighlightSquares(); //no more need to highlight possible squares after doing a valid move
+                        generateMove(fl);
+                        //TODO check if mat (using chessProcessor)
+                        // if game isn't over after user has done a valid move, change turns:
+                        isBottomTurn = 0;
+                        playRivalTurn();
                     }
                     // else, if an un-highlighted square with no chess-piece is chosen, clean previous choice:
                     else if (this.board[row][col].equals("_")) {
@@ -314,6 +326,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void unhighlightSquares() {
+        if (highlightedSquares == null) return;
         for (Square square : highlightedSquares) {
             int i = square.getRow();
             int j = square.getCol();
@@ -354,4 +367,82 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
+    private void generateMove(FrameLayout fl) {
+        chessProcessor.makeMove(currentlyPressed1, currentlyPressed2);
+        updateBoardVisually(currentlyPressed1, currentlyPressed2, fl);
+        //if the move is castling (right side), make the required steps with the rook:
+        if (currentlyPressed1.getRow() == currentlyPressed2.getRow() &&
+                currentlyPressed2.getCol() - currentlyPressed1.getCol() == 2 &&
+                board[currentlyPressed2.getRow()][currentlyPressed2.getCol()].charAt(1) == 'k') {
+            int row = currentlyPressed1.getRow();
+            int col = currentlyPressed2.getCol() - 1; //of rook after castling
+            Square originSquare = new Square(row, 7), targetSquare = new Square(row, col);
+            chessProcessor.makeMove(originSquare, targetSquare);
+            FrameLayout target_fl = (FrameLayout) chessBoard.getChildAt(row * 8 + col);
+            updateBoardVisually(originSquare, targetSquare, target_fl);
+        }
+        //if the move is castling (left side), make the required steps with the rook:
+        if (currentlyPressed1.getRow() == currentlyPressed2.getRow() &&
+                currentlyPressed1.getCol() - currentlyPressed2.getCol() == 2 &&
+                board[currentlyPressed2.getRow()][currentlyPressed2.getCol()].charAt(1) == 'k') {
+            int row = currentlyPressed1.getRow();
+            int col = currentlyPressed2.getCol() + 1; //of rook after castling
+            Square originSquare = new Square(row, 0), targetSquare = new Square(row, col);
+            chessProcessor.makeMove(originSquare, targetSquare);
+            FrameLayout target_fl = (FrameLayout) chessBoard.getChildAt(row * 8 + col);
+            updateBoardVisually(originSquare, targetSquare, target_fl);
+        }
+    }
+
+    private void updateBoardVisually(Square fromSquare, Square toSquare, FrameLayout fl) {
+        FrameLayout parentView = findViewById(R.id.parent_view);
+        FrameLayout origin_fl = (FrameLayout) chessBoard.getChildAt(fromSquare.getRow() * 8 + fromSquare.getCol());
+        ImageView cpView = (ImageView) origin_fl.getChildAt(origin_fl.getChildCount() - 1);
+        addViewToParentViewGroup(cpView, origin_fl);
+        View targetView = chessBoard.getChildAt(toSquare.getRow()* 8 + toSquare.getCol());
+        int[] targetLocation = new int[2];
+        targetView.getLocationOnScreen(targetLocation);
+        ImageView newViewForBoard = getPieceFromString(board[toSquare.getRow()][toSquare.getCol()]);
+        cpView.animate()
+                .translationX(targetLocation[0])
+                .translationY(targetLocation[1] - chessBoard.getHeight()/12)
+                .setDuration(500) // Set the duration of the animation in milliseconds
+                .withEndAction(() -> {
+                    parentView.removeView(cpView);
+                    if (fl.getChildCount() != 0) {
+                        if (fl.getChildCount() > 1) {
+                            fl.removeViewAt(fl.getChildCount() - 1);
+                        } else {
+                            if (fl.getChildAt(0) instanceof ImageView) {
+                                fl.removeViewAt(0);
+                            }
+                        }
+                    }
+                    fl.addView(newViewForBoard);
+                })
+                .start();
+    }
+
+    private void addViewToParentViewGroup(View cpView, FrameLayout origin_fl) {
+        FrameLayout parentView = findViewById(R.id.parent_view);
+        int width = cpView.getWidth(), height = cpView.getHeight();
+        int[] originalPosition = new int[2];
+        cpView.getLocationOnScreen(originalPosition);
+        int originalX = originalPosition[0];
+        int originalY = originalPosition[1] - chessBoard.getHeight()/12;
+        origin_fl.removeView(cpView);
+        ViewGroup.LayoutParams layoutParams = cpView.getLayoutParams();
+        layoutParams.width = width;
+        layoutParams.height = height;
+        cpView.setLayoutParams(layoutParams);
+        cpView.setX(originalX);
+        cpView.setY(originalY);
+        parentView.addView(cpView);
+    }
+
+    private void playRivalTurn() {
+        //TODO get move from rival method and check if mat
+        // if not mat, update board accordingly and uncolor previously own pressed squares (and color rival squares)
+        // afterwards, change turn again
+    }
 }

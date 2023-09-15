@@ -3,7 +3,7 @@ import java.util.ArrayList;
 
 public class ChessProcessor {
     String[][] board;
-    private final ArrayList<ChessPiece> chessPieces;
+    private final ArrayList<ChessPiece> chessPieces; //for onBoard pieces
     King whiteKing;
     King blackKing;
 
@@ -138,5 +138,34 @@ public class ChessProcessor {
         possibleBoard[possibleSquare.getRow()][possibleSquare.getCol()] = squareContent;
         possibleBoard[pressedSquare.getRow()][pressedSquare.getCol()] = "_";
         return possibleBoard;
+    }
+
+    public void makeMove(Square fromSquare, Square toSquare) {
+        //clean chessPieces list from eaten piece if any:
+        int toRow = toSquare.getRow(), toCol = toSquare.getCol();
+        if (!(board[toRow][toCol].equals("_"))) {
+            ChessPiece chessPiece = getChessPieceBySquare(toSquare);
+            chessPiece.setAlive(false);
+            chessPieces.remove(chessPiece);
+        }
+        //update board:
+        int fromRow = fromSquare.getRow(), fromCol = fromSquare.getCol();
+        board[toRow][toCol] = board[fromRow][fromCol];
+        board[fromRow][fromCol] = "_";
+        //update chessPiece square field:
+        ChessPiece chessPiece = getChessPieceBySquare(fromSquare);
+        chessPiece.setCurrentSquare(toSquare);
+        //if is rook/king/pawn, update "has not moved" field:
+        if (board[toRow][toCol].charAt(1) == 'k') {
+            ((King) chessPiece).setStillNotMoved(false);
+        }
+        if (board[toRow][toCol].charAt(1) == 'r') {
+            ((Rook) chessPiece).setStillNotMoved(false);
+        }
+        if (board[toRow][toCol].charAt(1) == 'p') {
+            ((Pawn) chessPiece).setStillNotMoved(false);
+        }
+        //TODO check if "mat" (and then test on real mat scenarios)
+        //TODO check if pawn reached end of board (if so, it transforms into queen)
     }
 }

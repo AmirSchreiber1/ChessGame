@@ -3,21 +3,21 @@ package com.example.chessgame;
 import java.util.ArrayList;
 
 public class King extends ChessPiece {
-    private int stillNotMoved;
+    private boolean stillNotMoved;
     Rook rightRook;
     Rook leftRook;
 
     public King(char color, Square currentSquare) {
         super(color, currentSquare);
-        this.stillNotMoved = 1;
+        this.stillNotMoved = true;
     }
 
 
-    public int getStillNotMoved() {
+    public boolean getStillNotMoved() {
         return stillNotMoved;
     }
 
-    public void setStillNotMoved(int stillNotMoved) {
+    public void setStillNotMoved(boolean stillNotMoved) {
         this.stillNotMoved = stillNotMoved;
     }
 
@@ -39,14 +39,14 @@ public class King extends ChessPiece {
         checkAndAddPossibleSquare(board, possibleSquares, row - 1, col + 1);
         checkAndAddPossibleSquare(board, possibleSquares, row - 1, col);
         checkAndAddPossibleSquare(board, possibleSquares, row - 1, col - 1);
-        if (this.stillNotMoved == 1 && rightRook.isAlive() && rightRook.getStillNotMoved()) {
+        if (this.stillNotMoved && rightRook.isAlive() && rightRook.getStillNotMoved()) {
             if (board[row][col+1].equals("_") && board[row][col+2].equals("_")) {
                 //possible hatzraha:
                 Square newSquare = new Square(row, col + 2);
                 possibleSquares.add(newSquare);
             }
         }
-        if (this.stillNotMoved == 1 &&  leftRook.isAlive() && leftRook.getStillNotMoved()) {
+        if (this.stillNotMoved &&  leftRook.isAlive() && leftRook.getStillNotMoved()) {
             if (board[row][col-1].equals("_") && board[row][col-2].equals("_")) {
                 //possible hatzraha:
                 Square newSquare = new Square(row, col - 2);

@@ -27,15 +27,47 @@ public class Pawn extends ChessPiece {
         int row = this.currentSquare.getRow();
         int col = this.currentSquare.getCol();
         if (isBottom == 1) {
-            checkAndAddPossibleSquare(board, possibleSquares, row - 1, col);
-            if (stillNotMoved && board[row - 1][col].equals("_")) {
-                checkAndAddPossibleSquare(board, possibleSquares, row - 2, col);
+            //regular moving:
+            if (row-1 >= 0 && board[row-1][col].equals("_")) {
+                Square newSquare = new Square(row - 1, col);
+                possibleSquares.add(newSquare);
+            }
+            if (row-1 >= 0 && stillNotMoved && board[row-1][col].equals("_")) {
+                if (row-2 >= 0 && board[row-2][col].equals("_")) {
+                    Square newSquare = new Square(row - 2, col);
+                    possibleSquares.add(newSquare);
+                }
+            }
+            //eating:
+            if (row-1>=0 && col-1>=0 && (!(board[row-1][col-1].equals("_"))) && board[row-1][col-1].charAt(0) != this.getColor()) {
+                Square newSquare = new Square(row - 1, col - 1);
+                possibleSquares.add(newSquare);
+            }
+            if (row-1>=0 && col+1 < 8 && (!(board[row-1][col+1].equals("_"))) && board[row-1][col+1].charAt(0) != this.getColor()) {
+                Square newSquare = new Square(row - 1, col + 1);
+                possibleSquares.add(newSquare);
             }
         }
         else { //isUp
-            checkAndAddPossibleSquare(board, possibleSquares, row + 1, col);
-            if (stillNotMoved && board[row - 1][col].equals("_")) {
-                checkAndAddPossibleSquare(board, possibleSquares, row + 2, col);
+            //regular moving:
+            if (row+1<8 && board[row+1][col].equals("_")) {
+                Square newSquare = new Square(row + 1, col);
+                possibleSquares.add(newSquare);
+            }
+            if (row+1<8 && stillNotMoved && board[row+1][col].equals("_")) {
+                if (row+2<8 && board[row+2][col].equals("_")) {
+                    Square newSquare = new Square(row + 2, col);
+                    possibleSquares.add(newSquare);
+                }
+            }
+            //eating:
+            if (row+1<8 && col-1>=0 && (!(board[row+1][col-1].equals("_"))) && board[row+1][col-1].charAt(0) != this.getColor()) {
+                Square newSquare = new Square(row + 1, col - 1);
+                possibleSquares.add(newSquare);
+            }
+            if (row+1<8 && col+1<8 && (!(board[row+1][col+1].equals("_"))) && board[row+1][col+1].charAt(0) != this.getColor()) {
+                Square newSquare = new Square(row + 1, col + 1);
+                possibleSquares.add(newSquare);
             }
         }
         return possibleSquares;
