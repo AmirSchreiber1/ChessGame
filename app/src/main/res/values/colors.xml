@@ -8,6 +8,7 @@
     <color name="light_green">#EAEDC3</color>
     <color name="dark_green">#67AF7F</color>
     <color name="less_dark_green">#70C78D</color>
+    <color name="transparent_white">#8FDFDFDF</color>
 
 
 </resources>

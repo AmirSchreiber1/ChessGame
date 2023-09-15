@@ -21,6 +21,7 @@ import android.widget.Toast;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class GameActivity extends AppCompatActivity {
@@ -43,6 +44,9 @@ public class GameActivity extends AppCompatActivity {
             {"_","_","_","_","_","_","_","_"},
             {"bp","bp","bp","bp","bp","bp","bp","bp"},
             {"br","bn","bb","bk","bq","bb","bn","br"}};
+    String[][] board = null;
+    Square currentlyPressed1 = new Square(-1, -1); //-1,-1 means there isn't a square pressed
+    Square currentlyPressed2 =  new Square(-1, -1); //2 is for highlighting 2 squares after making a move
     int clockTimeChoice;
     TextView upperTimer;
     TextView bottomTimer;
@@ -52,6 +56,9 @@ public class GameActivity extends AppCompatActivity {
     int isWhite;
     int isUnlimited = 0;
     int isBottomTurn = 0;
+    ChessProcessor chessProcessor;
+
+    ArrayList<Square> highlightedSquares;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,10 +71,12 @@ public class GameActivity extends AppCompatActivity {
         chessBoard = findViewById(R.id.chessBoard);
         isWhite = ThreadLocalRandom.current().nextInt(1, 2 + 1);
         if (isWhite == 1) {
-            setBoard(startingBoardWhite);
+            board = startingBoardWhite;
         }
         else {
-            setBoard(startingBoardBlack);}
+            board = startingBoardBlack;}
+        setBoard(board);
+        chessProcessor = new ChessProcessor(board);
         setTimers();
     }
     private void setTimers(){
@@ -104,7 +113,7 @@ public class GameActivity extends AppCompatActivity {
             bottomStartingTimeMillis = startingTimeMillis;
             upperStartingTimeMillis = startingTimeMillis + 100;
         }
-        //set the counter (being the timers indicators):
+        //set the counter (being the timers' indicators):
         upperCounter = new CountDownTimer(upperStartingTimeMillis, 1000) {
             public void onTick(long millisUntilFinished) {
                 // Used for formatting digit to be in 2 digits only
@@ -149,16 +158,8 @@ public class GameActivity extends AppCompatActivity {
                 params.height = 0;
                 fl.setLayoutParams(params);
 
-                // the square itself, without the chess piece, is an ImageView
-                ImageView square = new ImageView(this);
-                if ((row + col) % 2 == 0) {
-                    Drawable lightSquareBg = ContextCompat.getDrawable(this, R.drawable.light_square);
-                    square.setBackground(lightSquareBg);
-                } else {
-                    Drawable darkSquareBg = ContextCompat.getDrawable(this, R.drawable.dark_square);
-                    square.setBackground(darkSquareBg);
-                }
-                fl.addView(square);
+                // set original (non pressed) square background according to index:
+                setOriginalBackgroundByIndex(fl, row, col);
 
                 //indexes (displayed via TextViews):
                 if (col == 0) {
@@ -191,6 +192,9 @@ public class GameActivity extends AppCompatActivity {
 
                 //add the square with the piece to the gridLayout (generating the board that way):
                 chessBoard.addView(fl);
+
+                //add functionality:
+                addFunctionality(fl);
             }
         }
     }
@@ -237,4 +241,97 @@ public class GameActivity extends AppCompatActivity {
         }
         return chessPiece;
     }
+
+    private void addFunctionality(FrameLayout fl) {
+        int squareIndex = chessBoard.indexOfChild(fl);
+        int row = squareIndex / 8, col = squareIndex % 8;
+        fl.setOnClickListener(view -> {
+            // background for chosen square:
+            Drawable pressedSquareBg = ContextCompat.getDrawable(this, R.drawable.pressed_square);
+            char firstCharOfColor = 0; //can be 'w' or 'b'
+            if (isBottomTurn == 1) { //respond to clicks only when user's turn
+                if (isWhite == 1) { //get first char of user's color (is used later):
+                    firstCharOfColor = 'w';
+                } else {
+                    firstCharOfColor = 'b';
+                }
+                // fl is the frameLayout of the square just clicked
+                // (row, col) is the index of the square corresponding to the last click
+                if (currentlyPressed1.getRow() == -1) { //if no square is previously pressed:
+                    // if no chess-piece on the just-pressed square, or there is a piece of another color there, do nothing:
+                    if (this.board[row][col].equals("_") || board[row][col].charAt(0) != firstCharOfColor) {
+                        return;
+                    }
+                    //else, no square is previously pressed and a square with a chess piece of the right color was just clicked, so choose it:
+                    currentlyPressed1.setRow(row);
+                    currentlyPressed1.setCol(col);
+                    fl.setBackground(pressedSquareBg);
+                    // after clicking on a chess-piece of the right color, we want to highlight the squares this piece can move to:
+                    highlightPossibleSquares(new Square(row, col));
+                } else if (currentlyPressed1.getRow() == row && currentlyPressed1.getCol() == col) { //if already-chosen square is pressed, un-choose it:
+                    setOriginalBackgroundByIndex(fl, row, col);
+                    currentlyPressed1.setRow(-1);
+                    currentlyPressed1.setCol(-1);
+                    //also, unhighlight previously-highlighted squares:
+                    unhighlightSquares();
+                } else { //if there is a chosen square and user chooses another one:
+                    // TODO if just pressed square is one of possible squares, move the previously chosen piece to that square (afterwards, change turn)
+                    // TODO otherwise, if there is a chess piece of the right color on the last just pressed square, change choice to that square
+                    // TODO else, cancel first choice
+                    // un-choose previously chosen square and then choose the new one:
+
+
+/*                    FrameLayout alreadyChosenSquare = (FrameLayout) chessBoard.getChildAt(currentlyPressed1[0]*8 + currentlyPressed1[1]);
+                    setOriginalBackgroundByIndex(alreadyChosenSquare, currentlyPressed1[0], currentlyPressed1[1]);
+                    fl.setBackground(pressedSquareBg);
+                    currentlyPressed1[0] = row;
+                    currentlyPressed1[1] = col;*/
+                }
+            }
+        });
+    }
+
+    private void highlightPossibleSquares(Square pressedSquare) {
+        highlightedSquares = chessProcessor.getPossibleSquares(pressedSquare);
+        for (Square square : highlightedSquares) {
+            int row = square.getRow();
+            int col = square.getCol();
+            FrameLayout fl = (FrameLayout) chessBoard.getChildAt(row * 8 + col);
+            TextView whiteCircle = createWhiteCircle(square);
+            fl.addView(whiteCircle, 0);
+        }
+    }
+
+    private void unhighlightSquares() {
+        for (Square square : highlightedSquares) {
+            int i = square.getRow();
+            int j = square.getCol();
+            FrameLayout fl = (FrameLayout) chessBoard.getChildAt(i * 8 + j);
+            fl.removeViewAt(0);
+        }
+    }
+
+    TextView createWhiteCircle(Square square) {
+        TextView whiteCircle = new TextView(this);
+        Typeface iconsFont = Typeface.createFromAsset(getAssets(), "font/Icons South St.ttf");
+        whiteCircle.setTypeface(iconsFont);
+        whiteCircle.setGravity(Gravity.CENTER);
+        whiteCircle.setText("e");
+        whiteCircle.setTextColor(getColor(R.color.transparent_white));
+        if (square.getIsEmpty() == 0) {
+            whiteCircle.setTextSize(25);
+        }
+        return whiteCircle;
+    }
+
+    private void setOriginalBackgroundByIndex(FrameLayout fl, int row, int col) {
+        if ((row + col) % 2 == 0) {
+            Drawable lightSquareBg = ContextCompat.getDrawable(this, R.drawable.light_square);
+            fl.setBackground(lightSquareBg);
+        } else {
+            Drawable darkSquareBg = ContextCompat.getDrawable(this, R.drawable.dark_square);
+            fl.setBackground(darkSquareBg);
+        }
+    }
+
 }
