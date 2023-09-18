@@ -39,11 +39,11 @@ public class Pawn extends ChessPiece {
                 }
             }
             //eating:
-            if (row-1>=0 && col-1>=0 && (!(board[row-1][col-1].equals("_"))) && board[row-1][col-1].charAt(0) != this.getColor()) {
+            if (row-1>=0 && col-1>=0 && (!(board[row-1][col-1].equals("_"))) && board[row-1][col-1].charAt(0) != this.color) {
                 Square newSquare = new Square(row - 1, col - 1);
                 possibleSquares.add(newSquare);
             }
-            if (row-1>=0 && col+1 < 8 && (!(board[row-1][col+1].equals("_"))) && board[row-1][col+1].charAt(0) != this.getColor()) {
+            if (row-1>=0 && col+1 < 8 && (!(board[row-1][col+1].equals("_"))) && board[row-1][col+1].charAt(0) != this.color) {
                 Square newSquare = new Square(row - 1, col + 1);
                 possibleSquares.add(newSquare);
             }
@@ -61,11 +61,11 @@ public class Pawn extends ChessPiece {
                 }
             }
             //eating:
-            if (row+1<8 && col-1>=0 && (!(board[row+1][col-1].equals("_"))) && board[row+1][col-1].charAt(0) != this.getColor()) {
+            if (row+1<8 && col-1>=0 && (!(board[row+1][col-1].equals("_"))) && board[row+1][col-1].charAt(0) != this.color) {
                 Square newSquare = new Square(row + 1, col - 1);
                 possibleSquares.add(newSquare);
             }
-            if (row+1<8 && col+1<8 && (!(board[row+1][col+1].equals("_"))) && board[row+1][col+1].charAt(0) != this.getColor()) {
+            if (row+1<8 && col+1<8 && (!(board[row+1][col+1].equals("_"))) && board[row+1][col+1].charAt(0) != this.color) {
                 Square newSquare = new Square(row + 1, col + 1);
                 possibleSquares.add(newSquare);
             }

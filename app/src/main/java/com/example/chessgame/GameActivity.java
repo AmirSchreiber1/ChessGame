@@ -4,10 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.content.Intent;
-import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.view.Gravity;
@@ -16,9 +14,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
@@ -48,12 +44,17 @@ public class GameActivity extends AppCompatActivity {
     String[][] board = null;
     Square currentlyPressed1 = new Square(-1, -1); //-1,-1 means there isn't a square pressed
     Square currentlyPressed2 =  new Square(-1, -1); //2 is for highlighting 2 squares after making a move
+    Square currentlyPressedRival1 = new Square(-1, -1);
+    Square currentlyPressedRival2 = new Square(-1, -1);
     int clockTimeChoice;
-    TextView upperTimer;
-    TextView bottomTimer;
+    Drawable pressedSquareBg;
+
+    CountDownTimer timer;
+    TextView upperTimerTV;
+    TextView bottomTimerTV;
+    long timeLeftBottom;
+    long timeLeftUp;
     GridLayout chessBoard;
-    CountDownTimer upperCounter;
-    CountDownTimer bottomCounter;
     int isWhite;
     int isUnlimited = 0;
     int isBottomTurn = 0;
@@ -67,8 +68,8 @@ public class GameActivity extends AppCompatActivity {
         setContentView(R.layout.activity_game);
         Intent intent = getIntent();
         clockTimeChoice = intent.getIntExtra("clockTimeChoice", 3);
-        upperTimer = findViewById(R.id.upperTimer);
-        bottomTimer = findViewById(R.id.bottomTimer);
+        upperTimerTV = findViewById(R.id.upperTimer);
+        bottomTimerTV = findViewById(R.id.bottomTimer);
         chessBoard = findViewById(R.id.chessBoard);
         isWhite = ThreadLocalRandom.current().nextInt(1, 2 + 1);
         if (isWhite == 1) {
@@ -79,11 +80,13 @@ public class GameActivity extends AppCompatActivity {
         setBoard(board);
         chessProcessor = new ChessProcessor(board);
         setTimers();
+        pressedSquareBg = ContextCompat.getDrawable(this, R.drawable.pressed_square);
+
     }
     private void setTimers(){
         Typeface timerFont = Typeface.createFromAsset(getAssets(), "font/digital-7.ttf");
-        upperTimer.setTypeface(timerFont);
-        bottomTimer.setTypeface(timerFont);
+        upperTimerTV.setTypeface(timerFont);
+        bottomTimerTV.setTypeface(timerFont);
         String startingTime = null;
         int startingTimeMillis = 0;
         switch(clockTimeChoice) {
@@ -101,51 +104,23 @@ public class GameActivity extends AppCompatActivity {
                 break;
             case 4:
                 isUnlimited = 1;
+                if (isWhite == 1) isBottomTurn = 1;
                 return;
         }
-        upperTimer.setText(startingTime);
-        bottomTimer.setText(startingTime);
-        int bottomStartingTimeMillis, upperStartingTimeMillis;
+        upperTimerTV.setText(startingTime);
+        bottomTimerTV.setText(startingTime);
         if (isWhite == 1)  {
-            bottomStartingTimeMillis = startingTimeMillis + 100;
-            upperStartingTimeMillis = startingTimeMillis;
+            timeLeftBottom = startingTimeMillis + 100;
+            timeLeftUp = startingTimeMillis;
+            isBottomTurn = 1;
+            startTimer(timeLeftBottom, true);
         }
         else {
-            bottomStartingTimeMillis = startingTimeMillis;
-            upperStartingTimeMillis = startingTimeMillis + 100;
+            timeLeftBottom = startingTimeMillis;
+            timeLeftUp = startingTimeMillis + 100;
+            isBottomTurn = 0;
+            startTimer(timeLeftUp, false);
         }
-        //set the counter (being the timers' indicators):
-        upperCounter = new CountDownTimer(upperStartingTimeMillis, 1000) {
-            public void onTick(long millisUntilFinished) {
-                // Used for formatting digit to be in 2 digits only
-                NumberFormat f = new DecimalFormat("00");
-                long min = (millisUntilFinished / 60000) % 60;
-                long sec = (millisUntilFinished / 1000) % 60;
-                upperTimer.setText(f.format(min) + ":" + f.format(sec));
-            }
-            public void onFinish() {
-                //TODO (user wins)
-                upperTimer.setText("00:00");
-            }
-        };
-        bottomCounter = new CountDownTimer(bottomStartingTimeMillis, 1000) {
-            public void onTick(long millisUntilFinished) {
-                // Used for formatting digit to be in 2 digits only
-                NumberFormat f = new DecimalFormat("00");
-                long min = (millisUntilFinished / 60000) % 60;
-                long sec = (millisUntilFinished / 1000) % 60;
-                bottomTimer.setText(f.format(min) + ":" + f.format(sec));
-            }
-            public void onFinish() {
-                //TODO (rival wins)
-                bottomTimer.setText("00:00");
-            }
-        };
-        if (isWhite == 1) {
-            bottomCounter.start();
-            isBottomTurn = 1;
-        }
-        else upperCounter.start();
     }
 
     private void setBoard(String[][] startingBoard){
@@ -254,7 +229,6 @@ public class GameActivity extends AppCompatActivity {
         int row = squareIndex / 8, col = squareIndex % 8;
         fl.setOnClickListener(view -> {
             // background for chosen square:
-            Drawable pressedSquareBg = ContextCompat.getDrawable(this, R.drawable.pressed_square);
             char firstCharOfColor = 0; //can be 'w' or 'b'
             if (isBottomTurn == 1) { //respond to clicks only when user's turn
                 if (isWhite == 1) { //get first char of user's color (is used later):
@@ -287,10 +261,8 @@ public class GameActivity extends AppCompatActivity {
                         fl.setBackground(pressedSquareBg);
                         unhighlightSquares(); //no more need to highlight possible squares after doing a valid move
                         generateMove(fl);
-                        //TODO check if mat (using chessProcessor)
+                        //TODO check if mate/draw/stale-mate (using chessProcessor)
                         // if game isn't over after user has done a valid move, change turns:
-                        isBottomTurn = 0;
-                        playRivalTurn();
                     }
                     // else, if an un-highlighted square with no chess-piece is chosen, clean previous choice:
                     else if (this.board[row][col].equals("_")) {
@@ -351,7 +323,7 @@ public class GameActivity extends AppCompatActivity {
         whiteCircle.setGravity(Gravity.CENTER);
         whiteCircle.setText("e");
         whiteCircle.setTextColor(getColor(R.color.transparent_white));
-        if (square.getIsEmpty() == 0) {
+        if (!(board[square.getRow()][square.getCol()].equals("_"))) {
             whiteCircle.setTextSize(25);
         }
         return whiteCircle;
@@ -394,31 +366,50 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
-    private void updateBoardVisually(Square fromSquare, Square toSquare, FrameLayout fl) {
+    private void updateBoardVisually(Square fromSquare, Square toSquare, FrameLayout to_fl) {
+        //when rival is making his move, reset own previously chosen squares, and color rival's chosen squares:
+        if (isBottomTurn == 0) {
+            reSetPreviouslyChosenSquares(currentlyPressed1, currentlyPressed2);
+            colorRivalChosenSquares();
+        } else { //when user is making his move, reset rival's previously chosen squares:
+            if (currentlyPressedRival1.getRow() != -1) reSetPreviouslyChosenSquares(currentlyPressedRival1, currentlyPressedRival2);
+        }
+        //the animation itself:
         FrameLayout parentView = findViewById(R.id.parent_view);
-        FrameLayout origin_fl = (FrameLayout) chessBoard.getChildAt(fromSquare.getRow() * 8 + fromSquare.getCol());
+        int fromRow = fromSquare.getRow(), fromCol = fromSquare.getCol(), toRow = toSquare.getRow(), toCol = toSquare.getCol();
+        FrameLayout origin_fl = (FrameLayout) chessBoard.getChildAt(fromRow * 8 + fromCol);
         ImageView cpView = (ImageView) origin_fl.getChildAt(origin_fl.getChildCount() - 1);
         addViewToParentViewGroup(cpView, origin_fl);
-        View targetView = chessBoard.getChildAt(toSquare.getRow()* 8 + toSquare.getCol());
+        View targetView = chessBoard.getChildAt(toRow* 8 + toCol);
         int[] targetLocation = new int[2];
         targetView.getLocationOnScreen(targetLocation);
-        ImageView newViewForBoard = getPieceFromString(board[toSquare.getRow()][toSquare.getCol()]);
+        ImageView newViewForBoard = getPieceFromString(board[toRow][toCol]);
         cpView.animate()
                 .translationX(targetLocation[0])
                 .translationY(targetLocation[1] - chessBoard.getHeight()/12)
-                .setDuration(500) // Set the duration of the animation in milliseconds
+                .setDuration(250) // Set the duration of the animation in milliseconds
                 .withEndAction(() -> {
                     parentView.removeView(cpView);
-                    if (fl.getChildCount() != 0) {
-                        if (fl.getChildCount() > 1) {
-                            fl.removeViewAt(fl.getChildCount() - 1);
+                    if (to_fl.getChildCount() != 0) {
+                        if (to_fl.getChildCount() > 1) {
+                            to_fl.removeViewAt(to_fl.getChildCount() - 1);
                         } else {
-                            if (fl.getChildAt(0) instanceof ImageView) {
-                                fl.removeViewAt(0);
+                            if (to_fl.getChildAt(0) instanceof ImageView) {
+                                to_fl.removeViewAt(0);
                             }
                         }
                     }
-                    fl.addView(newViewForBoard);
+                    //if the move is a pawn reaching the other (rival side) end of board, transform it into a queen:
+                    if ((toRow == 0 || toRow == 7) && board[toRow][toCol].charAt(1) == 'p') {
+                        char color = board[toSquare.getRow()][toSquare.getCol()].charAt(0);
+                        ImageView queenIV = getPieceFromString(color + "q");
+                        to_fl.addView(queenIV);
+                        chessProcessor.transformIntoQueen(toSquare);
+                    } else { //otherwise, restore the same piece into the gridlayout:
+                        to_fl.addView(newViewForBoard);
+                    }
+                    //when animation is finished, turn is passed to other player.
+                    changeTurns();
                 })
                 .start();
     }
@@ -441,8 +432,98 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void playRivalTurn() {
-        //TODO get move from rival method and check if mat
-        // if not mat, update board accordingly and uncolor previously own pressed squares (and color rival squares)
-        // afterwards, change turn again
+        if (!(isUnlimited == 1)) resumeTimer(timeLeftUp, false);
+        new Thread(() -> {
+            try {
+                Thread.sleep(2000);
+                this.runOnUiThread(() -> {
+                    for (int j = 0; j < 8; j++) {
+                        if (!((board[1][j]).equals("_"))) {
+                            chessProcessor.makeMove(new Square(1, j), new Square(3, j));
+                            currentlyPressedRival1.setRow(1);
+                            currentlyPressedRival1.setCol(j);
+                            currentlyPressedRival2.setRow(3);
+                            currentlyPressedRival2.setCol(j);
+                            updateBoardVisually(new Square(1, j), new Square(3, j), (FrameLayout) chessBoard.getChildAt(3*8 + j));
+                            break;
+                        }
+                    }
+                });
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).start();
+        //TODO get (real) move from rival method and check if draw/mate/stale-mate
+        // if not endOfGame, update board accordingly and uncolor previously own pressed squares (and color rival squares)
     }
+
+    private void playOwnTurn() {
+        isBottomTurn = 1;
+        if (!(isUnlimited == 1)) resumeTimer(timeLeftBottom, true);
+
+    }
+
+    private void pauseTimer() {
+        this.timer.cancel();
+    }
+
+    private void resumeTimer(long timeLeft, boolean isBottom) {
+        startTimer(timeLeft, isBottom);
+    }
+
+    private void startTimer(long timeLeft, boolean isBottomTimer) {
+        timer = new CountDownTimer(timeLeft, 1000) {
+            public void onTick(long millisUntilFinished) {
+                if (isBottomTimer) timeLeftBottom = millisUntilFinished;
+                else timeLeftUp = millisUntilFinished;
+                // Used for formatting digit to be in 2 digits only
+                NumberFormat f = new DecimalFormat("00");
+                long min = (millisUntilFinished / 60000) % 60;
+                long sec = (millisUntilFinished / 1000) % 60;
+                if (isBottomTimer) bottomTimerTV.setText(f.format(min) + ":" + f.format(sec));
+                else upperTimerTV.setText(f.format(min) + ":" + f.format(sec));
+
+            }
+            public void onFinish() {
+                //TODO (if isBottomTimer, rival wins. OW, user wins)
+                bottomTimerTV.setText("00:00");
+            }
+        }.start();
+    }
+
+    private void changeTurns() {
+        if (isBottomTurn == 1) {
+            isBottomTurn = 0;
+            if (!(isUnlimited == 1)) pauseTimer();
+
+            playRivalTurn();
+        } else {
+            if (!(isUnlimited == 1)) pauseTimer();
+            playOwnTurn();
+        }
+    }
+
+    private void reSetPreviouslyChosenSquares(Square square1, Square square2) {
+        int row1 = square1.getRow(), col1 = square1.getCol(),
+                row2 = square2.getRow(), col2 = square2.getCol();
+        FrameLayout fl1 = (FrameLayout) chessBoard.getChildAt(row1 * 8 + col1),
+                fl2 = (FrameLayout) chessBoard.getChildAt(row2 * 8 + col2);
+        setOriginalBackgroundByIndex(fl1, row1, col1);
+        setOriginalBackgroundByIndex(fl2, row2, col2);
+        square1.setRow(-1);
+        square1.setCol(-1);
+        square2.setRow(-1);
+        square2.setCol(-1);
+    }
+
+    private void colorRivalChosenSquares() {
+        int row1 = currentlyPressedRival1.getRow(), col1 = currentlyPressedRival1.getCol(),
+                row2 = currentlyPressedRival2.getRow(), col2 = currentlyPressedRival2.getCol();
+        FrameLayout fl1 = (FrameLayout) chessBoard.getChildAt(row1 * 8 + col1),
+                fl2 = (FrameLayout) chessBoard.getChildAt(row2 * 8 + col2);
+        fl1.setBackground(pressedSquareBg);
+        fl2.setBackground(pressedSquareBg);
+    }
+
+
 }

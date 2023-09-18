@@ -4,7 +4,7 @@ import java.sql.Array;
 import java.util.ArrayList;
 
 public abstract class ChessPiece {
-    private final char color; //can be 'w' or 'b'
+    protected final char color; //can be 'w' or 'b'
     protected Square currentSquare;
     private boolean isAlive;
 
@@ -218,7 +218,7 @@ public abstract class ChessPiece {
                 Square newSquare = new Square(possibleRow, possibleCol);
                 possibleSquares.add(newSquare);
             }
-            else if (board[possibleRow][possibleCol].charAt(0) != this.getColor()) {
+            else if (board[possibleRow][possibleCol].charAt(0) != this.color) {
                 Square newSquare = new Square(possibleRow, possibleCol);
                 newSquare.setIsEmpty(0);
                 possibleSquares.add(newSquare);

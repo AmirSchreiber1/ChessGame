@@ -1,4 +1,6 @@
 package com.example.chessgame;
+import android.graphics.Color;
+
 import java.util.ArrayList;
 
 public class ChessProcessor {
@@ -154,7 +156,7 @@ public class ChessProcessor {
         board[fromRow][fromCol] = "_";
         //update chessPiece square field:
         ChessPiece chessPiece = getChessPieceBySquare(fromSquare);
-        chessPiece.setCurrentSquare(toSquare);
+        chessPiece.setCurrentSquare(new Square(toSquare.getRow(), toSquare.getCol()));
         //if is rook/king/pawn, update "has not moved" field:
         if (board[toRow][toCol].charAt(1) == 'k') {
             ((King) chessPiece).setStillNotMoved(false);
@@ -165,7 +167,19 @@ public class ChessProcessor {
         if (board[toRow][toCol].charAt(1) == 'p') {
             ((Pawn) chessPiece).setStillNotMoved(false);
         }
-        //TODO check if "mat" (and then test on real mat scenarios)
-        //TODO check if pawn reached end of board (if so, it transforms into queen)
+        //TODO check if mate/stale-mate/draw (and then test on real scenarios)
+    }
+
+    public void transformIntoQueen(Square square) {
+        char color = 0;
+        for (ChessPiece cp : chessPieces) {
+            if (cp.getCurrentSquare().equals(square)) {
+                color = cp.getColor();
+                chessPieces.remove(cp);
+                break;
+            }
+        }
+        Queen queen = new Queen(color, square);
+        chessPieces.add(queen);
     }
 }
