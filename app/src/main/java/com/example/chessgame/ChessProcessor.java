@@ -97,16 +97,7 @@ public class ChessProcessor {
 
     public ArrayList<Square> getPossibleSquares(Square pressedSquare) {
         ChessPiece chessPiece = getChessPieceBySquare(pressedSquare);
-        ArrayList<Square> possibleSquares = chessPiece.getPossibleSquares(board);
-        ArrayList<Square> squares = new ArrayList<>(possibleSquares); //copy array to iterate on (so changes and deletions on possibleSquares are possible).
-        //check if own-"shakh" can occur due to possible move (bad scenario, invalid move)
-        for (Square possibleSquare : squares) {
-            String[][] possibleBoard = getBoardAfterPossibleMove(pressedSquare, possibleSquare);
-            if (isCreatingOwnCheck(possibleBoard, chessPiece.getColor(), possibleSquare)) {
-                possibleSquares.remove(possibleSquare);
-            }
-        }
-        return possibleSquares;
+        return getPossibleSquaresWithNoOwnCheck(chessPiece);
     }
 
     private boolean isCreatingOwnCheck(String[][] possibleBoard, char ownColor, Square possibleSquare) {
@@ -184,7 +175,7 @@ public class ChessProcessor {
 
     public boolean hasMovesToDo(char ownColor) { //checks if passed color player has moves to do
         for (ChessPiece cp : chessPieces) {
-            if (cp.color == ownColor && cp.getPossibleSquares(board).size() > 0) {
+            if (cp.color == ownColor && getPossibleSquaresWithNoOwnCheck(cp).size() > 0) {
                 return true;
             }
         }
@@ -241,4 +232,16 @@ public class ChessProcessor {
         return num;
     }
 
+    private ArrayList<Square> getPossibleSquaresWithNoOwnCheck(ChessPiece chessPiece) {
+        ArrayList<Square> possibleSquares = chessPiece.getPossibleSquares(board);
+        ArrayList<Square> squares = new ArrayList<>(possibleSquares); //copy array to iterate on (so changes and deletions on possibleSquares are possible).
+        //check if own-"shakh" can occur due to possible move (bad scenario, invalid move)
+        for (Square possibleSquare : squares) {
+            String[][] possibleBoard = getBoardAfterPossibleMove(chessPiece.getCurrentSquare(), possibleSquare);
+            if (isCreatingOwnCheck(possibleBoard, chessPiece.getColor(), possibleSquare)) {
+                possibleSquares.remove(possibleSquare);
+            }
+        }
+        return possibleSquares;
+    }
 }

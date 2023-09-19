@@ -64,6 +64,8 @@ public class GameActivity extends AppCompatActivity {
 
     ArrayList<Square> highlightedSquares;
 
+    Dialog dialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -544,7 +546,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void announceWinner(char color) {
-        Dialog dialog = new Dialog(this);
+        dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_box);
         isBottomTurn = 0; //make sure board isn't available for user to press after game ended
         //set the views:
@@ -559,7 +561,7 @@ public class GameActivity extends AppCompatActivity {
         displayDialog(dialog);
     }
     private void announceDraw() {
-        Dialog dialog = new Dialog(this);
+        dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_box);
         isBottomTurn = 0; //make sure board isn't available for user to press after game ended
         //set the views:
