@@ -167,7 +167,6 @@ public class ChessProcessor {
         if (board[toRow][toCol].charAt(1) == 'p') {
             ((Pawn) chessPiece).setStillNotMoved(false);
         }
-        //TODO check if mate/stale-mate/draw (and then test on real scenarios)
     }
 
     public void transformIntoQueen(Square square) {
@@ -182,4 +181,64 @@ public class ChessProcessor {
         Queen queen = new Queen(color, square);
         chessPieces.add(queen);
     }
+
+    public boolean hasMovesToDo(char ownColor) { //checks if passed color player has moves to do
+        for (ChessPiece cp : chessPieces) {
+            if (cp.color == ownColor && cp.getPossibleSquares(board).size() > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isBeingChecked(char ownColor) {
+        char rivalColor = ownColor == 'w'? 'b' : 'w';
+        for (ChessPiece cp : chessPieces) {
+            if (cp.color == rivalColor && cp.isCheckingRivalKing(board, ownColor)) return true;
+        }
+        return false;
+    }
+
+    public boolean isMated(char ownColor) {
+        return isBeingChecked(ownColor) && !(hasMovesToDo(ownColor));
+    }
+
+    public boolean isInStaleMate(char ownColor) {
+        return !(isBeingChecked(ownColor)) && !(hasMovesToDo(ownColor));
+    }
+
+    public boolean isDeadPosition() {
+        if (chessPieces.size() == 2) return true; //only kings
+        if (chessPieces.size() == 3) { //only kings and one bishop:
+            for (ChessPiece cp : chessPieces) {
+                if (cp instanceof Bishop || cp instanceof Knight) return true;
+            }
+            return false;
+        }
+        if (chessPieces.size() == 4) { //only kings and two rival bishops on the same square color:
+            if (numOfBishopsOnBoard() == 2) {
+                Bishop bishop1 = null;
+                Bishop bishop2 = null;
+                for (ChessPiece cp : chessPieces) {
+                    if (cp instanceof Bishop) {
+                        if (bishop1 == null) bishop1 = (Bishop) cp;
+                        else bishop2 = (Bishop) cp;
+                    }
+                }
+                int row1 = bishop1.getCurrentSquare().getRow(), col1 = bishop1.getCurrentSquare().getCol(),
+                        row2 = bishop2.currentSquare.getRow(), col2 = bishop2.getCurrentSquare().getCol();
+                if (bishop1.color != bishop2.color && (row1+col1+row2+col2)%2==0) return true;
+            }
+        }
+        return false;
+    }
+
+    private int numOfBishopsOnBoard() {
+        int num = 0;
+        for (ChessPiece cp : chessPieces) {
+            if (cp instanceof Bishop) num++;
+        }
+        return num;
+    }
+
 }

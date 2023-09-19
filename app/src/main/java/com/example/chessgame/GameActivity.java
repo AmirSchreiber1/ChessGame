@@ -3,6 +3,7 @@ package com.example.chessgame;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -11,6 +12,7 @@ import android.os.CountDownTimer;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.GridLayout;
 import android.widget.ImageView;
@@ -229,12 +231,12 @@ public class GameActivity extends AppCompatActivity {
         int row = squareIndex / 8, col = squareIndex % 8;
         fl.setOnClickListener(view -> {
             // background for chosen square:
-            char firstCharOfColor = 0; //can be 'w' or 'b'
+            char ownColor = 0; //can be 'w' or 'b'
             if (isBottomTurn == 1) { //respond to clicks only when user's turn
                 if (isWhite == 1) { //get first char of user's color (is used later):
-                    firstCharOfColor = 'w';
+                    ownColor = 'w';
                 } else {
-                    firstCharOfColor = 'b';
+                    ownColor = 'b';
                 }
                 // fl is the frameLayout of the square just clicked
                 // (row, col) is the index of the square corresponding to the last click
@@ -246,7 +248,7 @@ public class GameActivity extends AppCompatActivity {
                         currentlyPressed1.setRow(row);
                         currentlyPressed1.setCol(col);
                         fl.setBackground(pressedSquareBg);
-                        if (board[row][col].charAt(0) == firstCharOfColor) {
+                        if (board[row][col].charAt(0) == ownColor) {
                             //also, if that piece is of own color, highlight squares that piece can move to
                             highlightPossibleSquares(new Square(row, col));
                         }
@@ -261,8 +263,6 @@ public class GameActivity extends AppCompatActivity {
                         fl.setBackground(pressedSquareBg);
                         unhighlightSquares(); //no more need to highlight possible squares after doing a valid move
                         generateMove(fl);
-                        //TODO check if mate/draw/stale-mate (using chessProcessor)
-                        // if game isn't over after user has done a valid move, change turns:
                     }
                     // else, if an un-highlighted square with no chess-piece is chosen, clean previous choice:
                     else if (this.board[row][col].equals("_")) {
@@ -277,7 +277,7 @@ public class GameActivity extends AppCompatActivity {
                         currentlyPressed1.setRow(row);
                         currentlyPressed1.setCol(col);
                         fl.setBackground(pressedSquareBg);
-                        if (board[row][col].charAt(0) == firstCharOfColor) {
+                        if (board[row][col].charAt(0) == ownColor) {
                             highlightPossibleSquares(new Square(row, col));
                         }
                     }
@@ -377,6 +377,7 @@ public class GameActivity extends AppCompatActivity {
         //the animation itself:
         FrameLayout parentView = findViewById(R.id.parent_view);
         int fromRow = fromSquare.getRow(), fromCol = fromSquare.getCol(), toRow = toSquare.getRow(), toCol = toSquare.getCol();
+        char color = board[toRow][toCol].charAt(0);
         FrameLayout origin_fl = (FrameLayout) chessBoard.getChildAt(fromRow * 8 + fromCol);
         ImageView cpView = (ImageView) origin_fl.getChildAt(origin_fl.getChildCount() - 1);
         addViewToParentViewGroup(cpView, origin_fl);
@@ -390,25 +391,34 @@ public class GameActivity extends AppCompatActivity {
                 .setDuration(250) // Set the duration of the animation in milliseconds
                 .withEndAction(() -> {
                     parentView.removeView(cpView);
-                    if (to_fl.getChildCount() != 0) {
+                    if (to_fl.getChildCount() != 0) { //delete "eaten" piece:
                         if (to_fl.getChildCount() > 1) {
                             to_fl.removeViewAt(to_fl.getChildCount() - 1);
                         } else {
-                            if (to_fl.getChildAt(0) instanceof ImageView) {
+                            if (to_fl.getChildAt(0) instanceof ImageView) { //make sure the view we are about to delete is a chess piece and not an index
                                 to_fl.removeViewAt(0);
                             }
                         }
                     }
                     //if the move is a pawn reaching the other (rival side) end of board, transform it into a queen:
                     if ((toRow == 0 || toRow == 7) && board[toRow][toCol].charAt(1) == 'p') {
-                        char color = board[toSquare.getRow()][toSquare.getCol()].charAt(0);
                         ImageView queenIV = getPieceFromString(color + "q");
                         to_fl.addView(queenIV);
                         chessProcessor.transformIntoQueen(toSquare);
                     } else { //otherwise, restore the same piece into the gridlayout:
                         to_fl.addView(newViewForBoard);
                     }
-                    //when animation is finished, turn is passed to other player.
+                    //check if mate/draw/stale-mate:
+                    char possibleLoserColor = board[toRow][toCol].charAt(0) == 'w'? 'b' : 'w';
+                    if (chessProcessor.isMated(possibleLoserColor)) {
+                        announceWinner(color);
+                        return;
+                    }
+                    if (chessProcessor.isInStaleMate(possibleLoserColor) || chessProcessor.isDeadPosition()) {
+                        announceDraw();
+                        return;
+                    }
+                    // if not, change turns:
                     changeTurns();
                 })
                 .start();
@@ -453,8 +463,7 @@ public class GameActivity extends AppCompatActivity {
                 throw new RuntimeException(e);
             }
         }).start();
-        //TODO get (real) move from rival method and check if draw/mate/stale-mate
-        // if not endOfGame, update board accordingly and uncolor previously own pressed squares (and color rival squares)
+        //TODO get (real) move from rival method
     }
 
     private void playOwnTurn() {
@@ -485,8 +494,17 @@ public class GameActivity extends AppCompatActivity {
 
             }
             public void onFinish() {
-                //TODO (if isBottomTimer, rival wins. OW, user wins)
-                bottomTimerTV.setText("00:00");
+                char winnerColor = 0;
+                if (isBottomTimer) {
+                    bottomTimerTV.setText("00:00");
+                    if (isWhite == 1) winnerColor = 'b';
+                    else winnerColor = 'w';
+                } else {
+                    upperTimerTV.setText("00:00");
+                    if (isWhite == 1) winnerColor = 'w';
+                    else winnerColor = 'b';
+                }
+                announceWinner(winnerColor);
             }
         }.start();
     }
@@ -525,5 +543,68 @@ public class GameActivity extends AppCompatActivity {
         fl2.setBackground(pressedSquareBg);
     }
 
+    private void announceWinner(char color) {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_box);
+        isBottomTurn = 0; //make sure board isn't available for user to press after game ended
+        //set the views:
+        String winnerColor = null;
+        if (color == 'w') {
+            winnerColor = "White";
+        } else {
+            winnerColor = "Black";
+        }
+        setViewsForDialog(winnerColor + " wins!", dialog);
+        //create and start the dialog:
+        displayDialog(dialog);
+    }
+    private void announceDraw() {
+        Dialog dialog = new Dialog(this);
+        dialog.setContentView(R.layout.dialog_box);
+        isBottomTurn = 0; //make sure board isn't available for user to press after game ended
+        //set the views:
+        setViewsForDialog("Draw!", dialog);
+        //create and start the dialog:
+        displayDialog(dialog);
+    }
+
+    private void setViewsForDialog(String announcementString, Dialog dialog) {
+        TextView announcementTV = dialog.findViewById(R.id.announcementText);
+        announcementTV.setText(announcementString);
+        Typeface mainFont = Typeface.createFromAsset(getAssets(), "font/Farmhouse.otf");
+        announcementTV.setTypeface(mainFont);
+        setRematchButton(mainFont, dialog);
+        TextView cancelButtonTV = dialog.findViewById(R.id.cancelButton);
+        setCancelTV(cancelButtonTV, mainFont, dialog);
+    }
+
+    private void setRematchButton(Typeface font, Dialog dialog) {
+        Button rematchButton = dialog.findViewById(R.id.rematchButton);
+        rematchButton.setTypeface(font);
+        rematchButton.setOnClickListener(view -> {
+            Intent intent = getIntent();
+            finish();
+            dialog.dismiss();
+            startActivity(intent);
+        });
+    }
+
+    private void setCancelTV(TextView tv, Typeface font, Dialog dialog) {
+        tv.setTypeface(font);
+        tv.setOnClickListener(view -> {
+            dialog.dismiss();
+        });
+    }
+
+
+    private void displayDialog(Dialog dialog) {
+        dialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        dialog.setCancelable(false);
+        dialog.getWindow().getAttributes().windowAnimations = R.style.animation;
+        dialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.dialog_bg));
+        dialog.show();
+    }
+
+    //TODO add sounds
 
 }
