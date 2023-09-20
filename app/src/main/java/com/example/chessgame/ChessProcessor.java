@@ -1,5 +1,7 @@
 package com.example.chessgame;
 import android.graphics.Color;
+import android.util.Log;
+import android.widget.FrameLayout;
 
 import java.util.ArrayList;
 
@@ -53,9 +55,6 @@ public class ChessProcessor {
                 chessPiece = cp;
                 break;
             }
-        }
-        if (chessPiece == null) {
-            chessPiece = null;
         }
         return chessPiece;
     }
@@ -140,15 +139,29 @@ public class ChessProcessor {
                 possibleBoard[i][j] = currBoard[i][j];
             }
         }
-        //change possible board according to move:
-        String squareContent = currBoard[pressedSquare.getRow()][pressedSquare.getCol()];
+        int fromRow = pressedSquare.getRow(), fromCol = pressedSquare.getCol();
         int toRow = possibleSquare.getRow(), toCol = possibleSquare.getCol();
+        //change possible board according to move:
+        String squareContent = currBoard[fromRow][fromCol];
         if ((toRow == 0 || toRow == 7) && squareContent.charAt(1) == 'p') {
             possibleBoard[toRow][toCol] = squareContent.charAt(0) + "q";
         } else {
             possibleBoard[toRow][toCol] = squareContent;
         }
         possibleBoard[pressedSquare.getRow()][pressedSquare.getCol()] = "_";
+        //if move is right castling:
+        if (fromRow == toRow && toCol - fromCol == 2 &&
+                possibleBoard[toRow][toCol].charAt(1) == 'k') {
+            int col = toCol - 1; //of rook after castling
+            possibleBoard[toRow][col] = possibleBoard[toRow][toCol].charAt(0) + "r";
+            possibleBoard[toRow][7] = "_";
+            }
+        if (fromRow == toRow && fromCol - toCol == 2 &&
+                possibleBoard[toRow][toCol].charAt(1) == 'k') {
+            int col = toCol + 1; //of rook after castling
+            possibleBoard[toRow][col] = possibleBoard[toRow][toCol].charAt(0) + "r";
+            possibleBoard[toRow][0] = "_";
+        }
         return possibleBoard;
     }
 
@@ -202,7 +215,7 @@ public class ChessProcessor {
         return false;
     }
 
-    public boolean isBeingChecked(char ownColor) {
+    public boolean isBeingChecked(char ownColor, String[][] board) {
         char rivalColor = ownColor == 'w'? 'b' : 'w';
         for (ChessPiece cp : chessPieces) {
             if (cp.color == rivalColor && cp.isCheckingRivalKing(board, ownColor)) return true;
@@ -211,11 +224,11 @@ public class ChessProcessor {
     }
 
     public boolean isMated(char ownColor, String[][] board) {
-        return isBeingChecked(ownColor) && !(hasMovesToDo(ownColor, board));
+        return isBeingChecked(ownColor, board) && !(hasMovesToDo(ownColor, board));
     }
 
     public boolean isInStaleMate(char ownColor, String[][] board) {
-        return !(isBeingChecked(ownColor)) && !(hasMovesToDo(ownColor, board));
+        return !(isBeingChecked(ownColor, board)) && !(hasMovesToDo(ownColor, board));
     }
 
     public boolean isDeadPosition() {
@@ -265,7 +278,7 @@ public class ChessProcessor {
         return possibleSquares;
     }
 
-    public double negaMax(char color, String[][] board, Square fromSquare, Square toSquare, int depth) {
+    public double negaMax(char color, String[][] board, Square fromSquare, Square toSquare, int depth, int n) {
         if (depth == 0) {
             return evaluateChancesToWin(color, board);
         }
@@ -274,11 +287,11 @@ public class ChessProcessor {
         for (Move move : allMoves) {
             String[][] possibleBoard = move.getBoardAfterMove();
             ChessProcessor chessProcessorRec = new ChessProcessor(possibleBoard);
-
-            double score = (-1) * chessProcessorRec.negaMax(getRivalColor(color), possibleBoard, fromSquare, toSquare, depth - 1);
+            if (chessProcessorRec.evaluateChancesToWin(color, possibleBoard) < max) continue;
+            double score = (-1) * chessProcessorRec.negaMax(getRivalColor(color), possibleBoard, fromSquare, toSquare, depth - 1, n);
             if (score > max) {
                 max = score;
-                if (depth == 2) { //changing fromSquare&toSquare only in the outer layer of the recursion
+                if (depth == n) { //changing fromSquare&toSquare only in the outer layer of the recursion
                     fromSquare.setRow(move.getFromSquare().getRow());
                     fromSquare.setCol(move.getFromSquare().getCol());
                     toSquare.setRow(move.getToSquare().getRow());
@@ -293,8 +306,24 @@ public class ChessProcessor {
         double piecesValues = sumValueOfPieces(color, board) - sumValueOfPieces(getRivalColor(color), board);
         double piecesMobility = getAllPossibleMoves(color, board).size() - getAllPossibleMoves(getRivalColor(color), board).size();
         double kingSafety = evaluateKingSafety(color, board);
+        double checkValue = isBeingChecked(getRivalColor(color), board)? 8 : 0;
+        double ownCheckValue = isBeingChecked(color, board)? -8 : 0;
+        double mateValue = isMated(getRivalColor(color), board)? Double.POSITIVE_INFINITY : 0;
+        double ownMateValue = isMated(color, board)? Double.NEGATIVE_INFINITY : 0;
+        double piecesDeveloping = sumValueOfPieces(color, board);
+        double rivalPiecesDeveloping = sumValueOfPieces(getRivalColor(color), board);
         //TODO continue
-        return piecesValues + piecesMobility + kingSafety*piecesValues;
+        return piecesValues + 0.1*piecesMobility + 0.1*checkValue + 0.4*ownCheckValue + mateValue + ownMateValue + piecesDeveloping - rivalPiecesDeveloping;
+    }
+
+    private double piecesDeveloping(char color, String[][] board) {
+        double sumOfPiecesInMidBoard = 0;
+        for (int i = 2; i < 6; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (board[i][j].charAt(0) == color) sumOfPiecesInMidBoard += 1;
+            }
+        }
+        return sumOfPiecesInMidBoard;
     }
 
     private double sumValueOfPieces(char color, String[][] board) {
@@ -350,10 +379,15 @@ public class ChessProcessor {
         int toColIndex = Math.min(7, kingCol + 2);
         for (int i = fromRowIndex; i <= toRowIndex; i++) {
             for (int j = fromColIndex; j <= toColIndex; j++) {
-                if (board[i][j].charAt(0) != color) safety--;
-                if (board[i][j].equals(color + "p")) safety++;
+                if (board[i][j].equals(color + "p")) safety+=50;
             }
         }
+        for (int i = fromRowIndex; i <= toRowIndex; i++) {
+            for (int j = 0; j <= 7; j++) {
+                if (board[i][j].charAt(0) != color) safety-=50;
+            }
+        }
+
         return safety;
     }
 

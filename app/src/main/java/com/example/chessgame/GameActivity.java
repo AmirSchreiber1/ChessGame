@@ -467,8 +467,8 @@ public class GameActivity extends AppCompatActivity {
         new Thread(() -> {
             Square fromSquare = new Square(-1, -1), toSquare = new Square(-1, -1);
             //get next move into fromSquare, toSquare:
-            int depth = 2;
-            chessProcessor.negaMax(rivalColor, board, fromSquare, toSquare, depth);
+            int depth = 3;
+            chessProcessor.negaMax(rivalColor, board, fromSquare, toSquare, depth, depth);
             int fromRow = fromSquare.getRow(), fromCol = fromSquare.getCol(),
                     toRow = toSquare.getRow(), toCol = toSquare.getCol();
             chessProcessor.makeMove(fromSquare, toSquare);
@@ -479,6 +479,28 @@ public class GameActivity extends AppCompatActivity {
                 currentlyPressedRival2.setCol(toCol);
                 updateBoardVisually(fromSquare, toSquare, (FrameLayout) chessBoard.getChildAt(toRow * 8 + toCol));
             });
+            //if the move is castling (right side), make the required steps with the rook:
+            if (fromSquare.getRow() == toSquare.getRow() &&
+                    toSquare.getCol() - fromSquare.getCol() == 2 &&
+                    board[toSquare.getRow()][toSquare.getCol()].charAt(1) == 'k') {
+                int row = fromSquare.getRow();
+                int col = toSquare.getCol() - 1; //of rook after castling
+                Square originSquare = new Square(row, 7), targetSquare = new Square(row, col);
+                chessProcessor.makeMove(originSquare, targetSquare);
+                FrameLayout target_fl = (FrameLayout) chessBoard.getChildAt(row * 8 + col);
+                updateBoardVisually(originSquare, targetSquare, target_fl);
+            }
+            //if the move is castling (left side), make the required steps with the rook:
+            if (fromSquare.getRow() == toSquare.getRow() &&
+                    fromSquare.getCol() - toSquare.getCol() == 2 &&
+                    board[toSquare.getRow()][toSquare.getCol()].charAt(1) == 'k') {
+                int row = fromSquare.getRow();
+                int col = toSquare.getCol() + 1; //of rook after castling
+                Square originSquare = new Square(row, 0), targetSquare = new Square(row, col);
+                chessProcessor.makeMove(originSquare, targetSquare);
+                FrameLayout target_fl = (FrameLayout) chessBoard.getChildAt(row * 8 + col);
+                updateBoardVisually(originSquare, targetSquare, target_fl);
+            }
         }).start();
     }
 
