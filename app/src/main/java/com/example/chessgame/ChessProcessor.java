@@ -34,9 +34,14 @@ public class ChessProcessor {
 
     private void setRooksForKing(King king) {
         int row = king.getCurrentSquare().getRow();
-        Rook leftRook = (Rook) getChessPieceBySquare(row, 0);
-        Rook rightRook = (Rook) getChessPieceBySquare(row, 7);
-        king.setRooks(leftRook, rightRook);
+        ChessPiece possibleLeftRook = getChessPieceBySquare(row, 0);
+        if (possibleLeftRook instanceof Rook && possibleLeftRook.color == king.getColor()) {
+            king.setLeftRook((Rook) possibleLeftRook);
+        }
+        ChessPiece possibleRightRook = getChessPieceBySquare(row, 7);
+        if (possibleRightRook instanceof Rook && possibleRightRook.color == king.getColor()) {
+            king.setRightRook((Rook) possibleRightRook);
+        }
     }
 
     private ChessPiece getChessPieceBySquare(int row, int col) {
@@ -48,6 +53,9 @@ public class ChessProcessor {
                 chessPiece = cp;
                 break;
             }
+        }
+        if (chessPiece == null) {
+            chessPiece = null;
         }
         return chessPiece;
     }
@@ -86,8 +94,14 @@ public class ChessProcessor {
                 break;
             case 'p':
                 int isBottom = 1;
-                if (row == 1) {
-                    isBottom = 0;
+                if (GameActivity.isWhite == 1) {
+                    if (color == 'b') {
+                        isBottom = 0;
+                    }
+                } else {
+                    if (color == 'w') {
+                        isBottom = 0;
+                    }
                 }
                 chessPiece = new Pawn(color, square, isBottom);
                 break;
@@ -95,9 +109,9 @@ public class ChessProcessor {
         return chessPiece;
     }
 
-    public ArrayList<Square> getPossibleSquares(Square pressedSquare) {
+    public ArrayList<Square> getPossibleSquares(Square pressedSquare, String[][] board) {
         ChessPiece chessPiece = getChessPieceBySquare(pressedSquare);
-        return getPossibleSquaresWithNoOwnCheck(chessPiece);
+        return getPossibleSquaresWithNoOwnCheck(chessPiece, board);
     }
 
     private boolean isCreatingOwnCheck(String[][] possibleBoard, char ownColor, Square possibleSquare) {
@@ -118,17 +132,22 @@ public class ChessProcessor {
         return false;
     }
 
-    private String[][] getBoardAfterPossibleMove(Square pressedSquare, Square possibleSquare) {
+    private String[][] getBoardAfterPossibleMove(Square pressedSquare, Square possibleSquare, String[][] currBoard) {
         String[][] possibleBoard = new String[8][8];
         //copy current board to possible board:
         for (int i = 0; i < 8; i ++) {
             for (int j = 0; j < 8; j++) {
-                possibleBoard[i][j] = board[i][j];
+                possibleBoard[i][j] = currBoard[i][j];
             }
         }
         //change possible board according to move:
-        String squareContent = board[pressedSquare.getRow()][pressedSquare.getCol()];
-        possibleBoard[possibleSquare.getRow()][possibleSquare.getCol()] = squareContent;
+        String squareContent = currBoard[pressedSquare.getRow()][pressedSquare.getCol()];
+        int toRow = possibleSquare.getRow(), toCol = possibleSquare.getCol();
+        if ((toRow == 0 || toRow == 7) && squareContent.charAt(1) == 'p') {
+            possibleBoard[toRow][toCol] = squareContent.charAt(0) + "q";
+        } else {
+            possibleBoard[toRow][toCol] = squareContent;
+        }
         possibleBoard[pressedSquare.getRow()][pressedSquare.getCol()] = "_";
         return possibleBoard;
     }
@@ -147,7 +166,7 @@ public class ChessProcessor {
         board[fromRow][fromCol] = "_";
         //update chessPiece square field:
         ChessPiece chessPiece = getChessPieceBySquare(fromSquare);
-        chessPiece.setCurrentSquare(new Square(toSquare.getRow(), toSquare.getCol()));
+        chessPiece.setCurrentSquare(new Square(toRow, toCol));
         //if is rook/king/pawn, update "has not moved" field:
         if (board[toRow][toCol].charAt(1) == 'k') {
             ((King) chessPiece).setStillNotMoved(false);
@@ -163,19 +182,20 @@ public class ChessProcessor {
     public void transformIntoQueen(Square square) {
         char color = 0;
         for (ChessPiece cp : chessPieces) {
-            if (cp.getCurrentSquare().equals(square)) {
+            if (cp.getCurrentSquare().getRow() == square.getRow() && cp.getCurrentSquare().getCol() == square.getCol()) {
                 color = cp.getColor();
                 chessPieces.remove(cp);
                 break;
             }
         }
+        board[square.getRow()][square.getCol()] = color + "q";
         Queen queen = new Queen(color, square);
         chessPieces.add(queen);
     }
 
-    public boolean hasMovesToDo(char ownColor) { //checks if passed color player has moves to do
+    public boolean hasMovesToDo(char ownColor, String[][] board) { //checks if passed color player has moves to do
         for (ChessPiece cp : chessPieces) {
-            if (cp.color == ownColor && getPossibleSquaresWithNoOwnCheck(cp).size() > 0) {
+            if (cp.color == ownColor && getPossibleSquaresWithNoOwnCheck(cp, board).size() > 0) {
                 return true;
             }
         }
@@ -190,12 +210,12 @@ public class ChessProcessor {
         return false;
     }
 
-    public boolean isMated(char ownColor) {
-        return isBeingChecked(ownColor) && !(hasMovesToDo(ownColor));
+    public boolean isMated(char ownColor, String[][] board) {
+        return isBeingChecked(ownColor) && !(hasMovesToDo(ownColor, board));
     }
 
-    public boolean isInStaleMate(char ownColor) {
-        return !(isBeingChecked(ownColor)) && !(hasMovesToDo(ownColor));
+    public boolean isInStaleMate(char ownColor, String[][] board) {
+        return !(isBeingChecked(ownColor)) && !(hasMovesToDo(ownColor, board));
     }
 
     public boolean isDeadPosition() {
@@ -232,16 +252,132 @@ public class ChessProcessor {
         return num;
     }
 
-    private ArrayList<Square> getPossibleSquaresWithNoOwnCheck(ChessPiece chessPiece) {
+    private ArrayList<Square> getPossibleSquaresWithNoOwnCheck(ChessPiece chessPiece, String[][] board) {
         ArrayList<Square> possibleSquares = chessPiece.getPossibleSquares(board);
         ArrayList<Square> squares = new ArrayList<>(possibleSquares); //copy array to iterate on (so changes and deletions on possibleSquares are possible).
         //check if own-"shakh" can occur due to possible move (bad scenario, invalid move)
         for (Square possibleSquare : squares) {
-            String[][] possibleBoard = getBoardAfterPossibleMove(chessPiece.getCurrentSquare(), possibleSquare);
+            String[][] possibleBoard = getBoardAfterPossibleMove(chessPiece.getCurrentSquare(), possibleSquare, board);
             if (isCreatingOwnCheck(possibleBoard, chessPiece.getColor(), possibleSquare)) {
                 possibleSquares.remove(possibleSquare);
             }
         }
         return possibleSquares;
+    }
+
+    public double negaMax(char color, String[][] board, Square fromSquare, Square toSquare, int depth) {
+        if (depth == 0) {
+            return evaluateChancesToWin(color, board);
+        }
+        double max = Double.NEGATIVE_INFINITY;
+        ArrayList<Move> allMoves = getAllPossibleMoves(color, board);
+        for (Move move : allMoves) {
+            String[][] possibleBoard = move.getBoardAfterMove();
+            ChessProcessor chessProcessorRec = new ChessProcessor(possibleBoard);
+
+            double score = (-1) * chessProcessorRec.negaMax(getRivalColor(color), possibleBoard, fromSquare, toSquare, depth - 1);
+            if (score > max) {
+                max = score;
+                if (depth == 2) { //changing fromSquare&toSquare only in the outer layer of the recursion
+                    fromSquare.setRow(move.getFromSquare().getRow());
+                    fromSquare.setCol(move.getFromSquare().getCol());
+                    toSquare.setRow(move.getToSquare().getRow());
+                    toSquare.setCol(move.getToSquare().getCol());
+                }
+            }
+        }
+        return max;
+    }
+
+    public double evaluateChancesToWin(char color, String[][] board) {
+        double piecesValues = sumValueOfPieces(color, board) - sumValueOfPieces(getRivalColor(color), board);
+        double piecesMobility = getAllPossibleMoves(color, board).size() - getAllPossibleMoves(getRivalColor(color), board).size();
+        double kingSafety = evaluateKingSafety(color, board);
+        //TODO continue
+        return piecesValues + piecesMobility + kingSafety*piecesValues;
+    }
+
+    private double sumValueOfPieces(char color, String[][] board) {
+        double sum = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (board[i][j].charAt(0) == color) {
+                    sum += getPieceValue(board[i][j].charAt(1));
+                }
+            }
+        }
+        return sum;
+    }
+
+    private double getPieceValue(char pieceType) {
+        double value = 0;
+        switch(pieceType) {
+            case 'r':
+                value = 5;
+                break;
+            case 'n':
+            case 'b':
+                value = 3;
+                break;
+            case 'q':
+                value = 9;
+                break;
+            case 'k':
+                value = 200;
+                break;
+            case 'p':
+                value = 1;
+                break;
+        }
+        return value;
+    }
+
+    private double evaluateKingSafety(char color, String[][] board) {
+        double safety = 0;
+        int kingRow = 0, kingCol = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (board[i][j].equals(color + "k")) {
+                    kingRow = i;
+                    kingCol = j;
+                    break;
+                }
+            }
+        }
+        int fromRowIndex = Math.max(0, kingRow - 2);
+        int fromColIndex = Math.max(0, kingCol - 2);
+        int toRowIndex = Math.min(7, kingRow + 2);
+        int toColIndex = Math.min(7, kingCol + 2);
+        for (int i = fromRowIndex; i <= toRowIndex; i++) {
+            for (int j = fromColIndex; j <= toColIndex; j++) {
+                if (board[i][j].charAt(0) != color) safety--;
+                if (board[i][j].equals(color + "p")) safety++;
+            }
+        }
+        return safety;
+    }
+
+    private char getRivalColor(char color) {
+        return color == 'w'? 'b' : 'w';
+    }
+
+    private ArrayList<Move> getAllPossibleMoves(char color, String[][] board) {
+        ArrayList<Move> allMoves = new ArrayList<>();
+        for (ChessPiece cp : chessPieces) {
+            if (cp.color == color) {
+                ArrayList<Square> possibleSquares = getPossibleSquaresWithNoOwnCheck(cp, board);
+                addPossibleMovesOfCP(allMoves, possibleSquares, cp, board);
+            }
+        }
+        return allMoves;
+    }
+
+    private void addPossibleMovesOfCP(ArrayList<Move> allMoves, ArrayList<Square> possibleSquares, ChessPiece cp, String[][] currBoard) {
+        Square fromSquare = cp.getCurrentSquare();
+        for (Square toSquare : possibleSquares) {
+            String[][] possibleBoard = getBoardAfterPossibleMove(fromSquare, toSquare, currBoard);
+            Move move = new Move(fromSquare, toSquare, possibleBoard);
+            allMoves.add(move);
+        }
     }
 }

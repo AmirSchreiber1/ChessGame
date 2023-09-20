@@ -21,8 +21,11 @@ public class King extends ChessPiece {
         this.stillNotMoved = stillNotMoved;
     }
 
-    public void setRooks(Rook leftRook, Rook rightRook) {
+    public void setLeftRook(Rook leftRook) {
         this.leftRook = leftRook;
+    }
+
+    public void setRightRook(Rook rightRook) {
         this.rightRook = rightRook;
     }
 
@@ -39,14 +42,14 @@ public class King extends ChessPiece {
         checkAndAddPossibleSquare(board, possibleSquares, row - 1, col + 1);
         checkAndAddPossibleSquare(board, possibleSquares, row - 1, col);
         checkAndAddPossibleSquare(board, possibleSquares, row - 1, col - 1);
-        if (this.stillNotMoved && rightRook.isAlive() && rightRook.getStillNotMoved()) {
+        if (this.stillNotMoved && rightRook!= null && rightRook.isAlive() && rightRook.getStillNotMoved()) {
             if (board[row][col+1].equals("_") && board[row][col+2].equals("_")) {
                 //possible hatzraha:
                 Square newSquare = new Square(row, col + 2);
                 possibleSquares.add(newSquare);
             }
         }
-        if (this.stillNotMoved &&  leftRook.isAlive() && leftRook.getStillNotMoved()) {
+        if (this.stillNotMoved && leftRook!= null && leftRook.isAlive() && leftRook.getStillNotMoved()) {
             if (board[row][col-1].equals("_") && board[row][col-2].equals("_")) {
                 //possible hatzraha:
                 Square newSquare = new Square(row, col - 2);

@@ -57,7 +57,7 @@ public class GameActivity extends AppCompatActivity {
     long timeLeftBottom;
     long timeLeftUp;
     GridLayout chessBoard;
-    int isWhite;
+    public static int isWhite;
     int isUnlimited = 0;
     int isBottomTurn = 0;
     ChessProcessor chessProcessor;
@@ -108,7 +108,11 @@ public class GameActivity extends AppCompatActivity {
                 break;
             case 4:
                 isUnlimited = 1;
-                if (isWhite == 1) isBottomTurn = 1;
+                if (isWhite == 1) {
+                    playOwnTurn();
+                } else {
+                    playRivalTurn();
+                }
                 return;
         }
         upperTimerTV.setText(startingTime);
@@ -116,14 +120,12 @@ public class GameActivity extends AppCompatActivity {
         if (isWhite == 1)  {
             timeLeftBottom = startingTimeMillis + 100;
             timeLeftUp = startingTimeMillis;
-            isBottomTurn = 1;
-            startTimer(timeLeftBottom, true);
+            playOwnTurn();
         }
         else {
             timeLeftBottom = startingTimeMillis;
             timeLeftUp = startingTimeMillis + 100;
-            isBottomTurn = 0;
-            startTimer(timeLeftUp, false);
+            playRivalTurn();
         }
     }
 
@@ -289,7 +291,7 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void highlightPossibleSquares(Square pressedSquare) {
-        highlightedSquares = chessProcessor.getPossibleSquares(pressedSquare);
+        highlightedSquares = chessProcessor.getPossibleSquares(pressedSquare, board);
         for (Square square : highlightedSquares) {
             int row = square.getRow();
             int col = square.getCol();
@@ -342,25 +344,26 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void generateMove(FrameLayout fl) {
-        chessProcessor.makeMove(currentlyPressed1, currentlyPressed2);
-        updateBoardVisually(currentlyPressed1, currentlyPressed2, fl);
+        Square fromSquare = new Square(currentlyPressed1), toSquare = new Square(currentlyPressed2);
+        chessProcessor.makeMove(fromSquare, toSquare);
+        updateBoardVisually(fromSquare, toSquare, fl);
         //if the move is castling (right side), make the required steps with the rook:
-        if (currentlyPressed1.getRow() == currentlyPressed2.getRow() &&
-                currentlyPressed2.getCol() - currentlyPressed1.getCol() == 2 &&
-                board[currentlyPressed2.getRow()][currentlyPressed2.getCol()].charAt(1) == 'k') {
-            int row = currentlyPressed1.getRow();
-            int col = currentlyPressed2.getCol() - 1; //of rook after castling
+        if (fromSquare.getRow() == toSquare.getRow() &&
+                toSquare.getCol() - fromSquare.getCol() == 2 &&
+                board[toSquare.getRow()][toSquare.getCol()].charAt(1) == 'k') {
+            int row = fromSquare.getRow();
+            int col = toSquare.getCol() - 1; //of rook after castling
             Square originSquare = new Square(row, 7), targetSquare = new Square(row, col);
             chessProcessor.makeMove(originSquare, targetSquare);
             FrameLayout target_fl = (FrameLayout) chessBoard.getChildAt(row * 8 + col);
             updateBoardVisually(originSquare, targetSquare, target_fl);
         }
         //if the move is castling (left side), make the required steps with the rook:
-        if (currentlyPressed1.getRow() == currentlyPressed2.getRow() &&
-                currentlyPressed1.getCol() - currentlyPressed2.getCol() == 2 &&
-                board[currentlyPressed2.getRow()][currentlyPressed2.getCol()].charAt(1) == 'k') {
-            int row = currentlyPressed1.getRow();
-            int col = currentlyPressed2.getCol() + 1; //of rook after castling
+        if (fromSquare.getRow() == toSquare.getRow() &&
+                fromSquare.getCol() - toSquare.getCol() == 2 &&
+                board[toSquare.getRow()][toSquare.getCol()].charAt(1) == 'k') {
+            int row = fromSquare.getRow();
+            int col = toSquare.getCol() + 1; //of rook after castling
             Square originSquare = new Square(row, 0), targetSquare = new Square(row, col);
             chessProcessor.makeMove(originSquare, targetSquare);
             FrameLayout target_fl = (FrameLayout) chessBoard.getChildAt(row * 8 + col);
@@ -371,10 +374,10 @@ public class GameActivity extends AppCompatActivity {
     private void updateBoardVisually(Square fromSquare, Square toSquare, FrameLayout to_fl) {
         //when rival is making his move, reset own previously chosen squares, and color rival's chosen squares:
         if (isBottomTurn == 0) {
-            reSetPreviouslyChosenSquares(currentlyPressed1, currentlyPressed2);
+            reSetPreviouslyChosenSquares(currentlyPressed1, currentlyPressed2, false);
             colorRivalChosenSquares();
         } else { //when user is making his move, reset rival's previously chosen squares:
-            if (currentlyPressedRival1.getRow() != -1) reSetPreviouslyChosenSquares(currentlyPressedRival1, currentlyPressedRival2);
+            if (currentlyPressedRival1.getRow() != -1) reSetPreviouslyChosenSquares(currentlyPressedRival1, currentlyPressedRival2, true);
         }
         //the animation itself:
         FrameLayout parentView = findViewById(R.id.parent_view);
@@ -412,11 +415,11 @@ public class GameActivity extends AppCompatActivity {
                     }
                     //check if mate/draw/stale-mate:
                     char possibleLoserColor = board[toRow][toCol].charAt(0) == 'w'? 'b' : 'w';
-                    if (chessProcessor.isMated(possibleLoserColor)) {
+                    if (chessProcessor.isMated(possibleLoserColor, board)) {
                         announceWinner(color);
                         return;
                     }
-                    if (chessProcessor.isInStaleMate(possibleLoserColor) || chessProcessor.isDeadPosition()) {
+                    if (chessProcessor.isInStaleMate(possibleLoserColor, board) || chessProcessor.isDeadPosition()) {
                         announceDraw();
                         return;
                     }
@@ -444,28 +447,25 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void playRivalTurn() {
+        isBottomTurn = 0;
         if (!(isUnlimited == 1)) resumeTimer(timeLeftUp, false);
+        char rivalColor = isWhite == 1? 'b' : 'w';
         new Thread(() -> {
-            try {
-                Thread.sleep(2000);
-                this.runOnUiThread(() -> {
-                    for (int j = 0; j < 8; j++) {
-                        if (!((board[1][j]).equals("_"))) {
-                            chessProcessor.makeMove(new Square(1, j), new Square(3, j));
-                            currentlyPressedRival1.setRow(1);
-                            currentlyPressedRival1.setCol(j);
-                            currentlyPressedRival2.setRow(3);
-                            currentlyPressedRival2.setCol(j);
-                            updateBoardVisually(new Square(1, j), new Square(3, j), (FrameLayout) chessBoard.getChildAt(3*8 + j));
-                            break;
-                        }
-                    }
-                });
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
+            Square fromSquare = new Square(-1, -1), toSquare = new Square(-1, -1);
+            //get next move into fromSquare, toSquare:
+            int depth = 2;
+            chessProcessor.negaMax(rivalColor, board, fromSquare, toSquare, depth);
+            int fromRow = fromSquare.getRow(), fromCol = fromSquare.getCol(),
+                    toRow = toSquare.getRow(), toCol = toSquare.getCol();
+            chessProcessor.makeMove(fromSquare, toSquare);
+            this.runOnUiThread(() -> {
+                currentlyPressedRival1.setRow(fromRow);
+                currentlyPressedRival1.setCol(fromCol);
+                currentlyPressedRival2.setRow(toRow);
+                currentlyPressedRival2.setCol(toCol);
+                updateBoardVisually(fromSquare, toSquare, (FrameLayout) chessBoard.getChildAt(toRow * 8 + toCol));
+            });
         }).start();
-        //TODO get (real) move from rival method
     }
 
     private void playOwnTurn() {
@@ -491,8 +491,12 @@ public class GameActivity extends AppCompatActivity {
                 NumberFormat f = new DecimalFormat("00");
                 long min = (millisUntilFinished / 60000) % 60;
                 long sec = (millisUntilFinished / 1000) % 60;
-                if (isBottomTimer) bottomTimerTV.setText(f.format(min) + ":" + f.format(sec));
-                else upperTimerTV.setText(f.format(min) + ":" + f.format(sec));
+                if (isBottomTimer) {
+                    bottomTimerTV.setText(f.format(min) + ":" + f.format(sec));
+                }
+                else {
+                    upperTimerTV.setText(f.format(min) + ":" + f.format(sec));
+                }
 
             }
             public void onFinish() {
@@ -513,9 +517,7 @@ public class GameActivity extends AppCompatActivity {
 
     private void changeTurns() {
         if (isBottomTurn == 1) {
-            isBottomTurn = 0;
             if (!(isUnlimited == 1)) pauseTimer();
-
             playRivalTurn();
         } else {
             if (!(isUnlimited == 1)) pauseTimer();
@@ -523,13 +525,19 @@ public class GameActivity extends AppCompatActivity {
         }
     }
 
-    private void reSetPreviouslyChosenSquares(Square square1, Square square2) {
+    private void reSetPreviouslyChosenSquares(Square square1, Square square2, boolean isOfRival) {
         int row1 = square1.getRow(), col1 = square1.getCol(),
                 row2 = square2.getRow(), col2 = square2.getCol();
         FrameLayout fl1 = (FrameLayout) chessBoard.getChildAt(row1 * 8 + col1),
                 fl2 = (FrameLayout) chessBoard.getChildAt(row2 * 8 + col2);
-        setOriginalBackgroundByIndex(fl1, row1, col1);
-        setOriginalBackgroundByIndex(fl2, row2, col2);
+        if (fl1 != null) {
+            setOriginalBackgroundByIndex(fl1, row1, col1);
+        }
+        if (fl2 != null ) {
+            if (!isOfRival || !(currentlyPressed2.equals(square2))) {
+                setOriginalBackgroundByIndex(fl2, row2, col2);
+            }
+        }
         square1.setRow(-1);
         square1.setCol(-1);
         square2.setRow(-1);
@@ -546,6 +554,9 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void announceWinner(char color) {
+        //stoptimers:
+        this.timer.cancel();
+        unhighlightSquares();
         dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_box);
         isBottomTurn = 0; //make sure board isn't available for user to press after game ended
@@ -561,6 +572,9 @@ public class GameActivity extends AppCompatActivity {
         displayDialog(dialog);
     }
     private void announceDraw() {
+        //stoptimers:
+        this.timer.cancel();
+        unhighlightSquares();
         dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_box);
         isBottomTurn = 0; //make sure board isn't available for user to press after game ended
