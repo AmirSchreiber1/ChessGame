@@ -234,7 +234,6 @@ public class GameActivity extends AppCompatActivity {
         int squareIndex = chessBoard.indexOfChild(fl);
         int row = squareIndex / 8, col = squareIndex % 8;
         fl.setOnClickListener(view -> {
-            // background for chosen square:
             char ownColor = 0; //can be 'w' or 'b'
             if (isBottomTurn == 1) { //respond to clicks only when user's turn
                 if (isWhite == 1) { //get first char of user's color (is used later):
@@ -242,9 +241,18 @@ public class GameActivity extends AppCompatActivity {
                 } else {
                     ownColor = 'b';
                 }
+
                 // fl is the frameLayout of the square just clicked
                 // (row, col) is the index of the square corresponding to the last click
+
+
                 if (currentlyPressed1.getRow() == -1) { //if no square is previously pressed:
+                    //don't let user recolor last square rival moved a piece to
+                    if (new Square(row,col).equals(currentlyPressedRival2) &&
+                            !(highlightedSquares.contains(currentlyPressedRival2))) {
+                        return;
+                    }
+
                     // if no chess-piece on the just-pressed square, no need to do anything.
                     if (this.board[row][col].equals("_")) {
                         return;
@@ -272,9 +280,15 @@ public class GameActivity extends AppCompatActivity {
                     else if (this.board[row][col].equals("_")) {
                         FrameLayout alreadyChosen_fl = (FrameLayout) chessBoard.getChildAt(currentlyPressed1.getRow()*8 + currentlyPressed1.getCol());
                         cleanChoice(alreadyChosen_fl, currentlyPressed1.getRow(), currentlyPressed1.getCol());
-                    } //else, an un-highlighted square with chess piece was chosen:
-                    else { //if another piece is chosen, change choice:
-                        //clean previous choice:
+                    }
+                    else { //else, another piece is chosen, change choice:
+                        if (new Square(row,col).equals(currentlyPressedRival2) &&
+                                !(highlightedSquares.contains(currentlyPressedRival2))) {
+                            FrameLayout alreadyChosen_fl = (FrameLayout) chessBoard.getChildAt(currentlyPressed1.getRow()*8 + currentlyPressed1.getCol());
+                            cleanChoice(alreadyChosen_fl, currentlyPressed1.getRow(), currentlyPressed1.getCol());
+                            return;
+                        }
+                        // clean previous choice:
                         FrameLayout alreadyChosen_fl = (FrameLayout) chessBoard.getChildAt(currentlyPressed1.getRow()*8 + currentlyPressed1.getCol());
                         cleanChoice(alreadyChosen_fl, currentlyPressed1.getRow(), currentlyPressed1.getCol());
                         //choose new square:
