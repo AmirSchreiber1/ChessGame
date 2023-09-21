@@ -472,7 +472,6 @@ public class GameActivity extends AppCompatActivity {
             Square fromSquare = new Square(-1, -1), toSquare = new Square(-1, -1);
             //get next move into fromSquare, toSquare:
             int depth = 3;
-            if ((!(isUnlimited == 1)) && timeLeftUp < 90 * 1000) depth = 2; //rival plays faster if time left is less than 01:30
             chessProcessor.negaMax(rivalColor, fromSquare, toSquare, depth, depth);
             if (fromSquare.getRow() == -1) { //negaMax hasn't found a better move (mate is near).
                 // in this case, choose randomly from one of the possible moves.

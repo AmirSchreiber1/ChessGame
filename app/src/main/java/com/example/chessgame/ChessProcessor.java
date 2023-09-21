@@ -459,7 +459,7 @@ public class ChessProcessor {
         double ownMateValue = isMated(color, board)? Double.NEGATIVE_INFINITY : 0;
         double piecesDeveloping = piecesDeveloping(color, board) - piecesDeveloping(getRivalColor(color), board);
         //TODO continue
-        return piecesValues*2000 + checkValue + ownCheckValue + mateValue + ownMateValue + kingSafety + 0.2* piecesMobility;
+        return piecesValues*2000 + checkValue + ownCheckValue + mateValue + ownMateValue + kingSafety + piecesMobility + 10*piecesDeveloping;
     }
 
     private double piecesDeveloping(char color, String[][] board) {
@@ -534,7 +534,7 @@ public class ChessProcessor {
             }
         }*/
         if (kingCol < 2 || kingCol > 5) {
-            safety += 700;
+            safety += 50;
         }
 
         return safety;
