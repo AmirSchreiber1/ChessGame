@@ -10,6 +10,11 @@ public class Rook extends ChessPiece {
         this.stillNotMoved = true;
     }
 
+    public Rook(Rook rook) {
+        super(rook);
+        this.stillNotMoved = rook.getStillNotMoved();
+    }
+
     public boolean getStillNotMoved() {
         return stillNotMoved;
     }

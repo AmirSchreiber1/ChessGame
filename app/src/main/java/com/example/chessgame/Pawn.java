@@ -12,6 +12,15 @@ public class Pawn extends ChessPiece {
         this.stillNotMoved = true;
     }
 
+    public Pawn(Pawn pawn) {
+        super(pawn);
+        this.isBottom = pawn.getIsBottom();
+        this.stillNotMoved = pawn.getStillNotMoved();
+    }
+
+    public int getIsBottom() {
+        return isBottom;
+    }
 
     public boolean getStillNotMoved() {
         return stillNotMoved;

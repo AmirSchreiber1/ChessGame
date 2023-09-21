@@ -7,6 +7,10 @@ public class Bishop extends ChessPiece{
         super(color, currentSquare);
     }
 
+    public Bishop(Bishop bishop) {
+        super(bishop);
+    }
+
     @Override
     public ArrayList<Square> getPossibleSquares(String[][] board) {
         ArrayList<Square> possibleSquares = new ArrayList<>();

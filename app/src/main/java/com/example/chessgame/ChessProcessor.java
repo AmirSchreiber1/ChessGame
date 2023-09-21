@@ -4,6 +4,8 @@ import android.util.Log;
 import android.widget.FrameLayout;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class ChessProcessor {
     String[][] board;
@@ -15,6 +17,112 @@ public class ChessProcessor {
         this.board = board;
         this.chessPieces = new ArrayList<>();
         setChessPieces();
+    }
+
+    public ChessProcessor(ChessProcessor chessProcessor) {
+        this.board = new String[8][8];
+        copyBoard(chessProcessor.getBoard(), this.board);
+        this.chessPieces = new ArrayList<>();
+        copyChessPieces(chessProcessor.getChessPieces(), this.chessPieces);
+    }
+
+    private void copyBoard (String[][] originalBoard, String[][] newBoard) {
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j <8; j++) {
+                newBoard[i][j] = originalBoard[i][j];
+            }
+        }
+    }
+
+    private void copyChessPieces(ArrayList<ChessPiece> originalArr, ArrayList<ChessPiece> newArr) {
+        for (ChessPiece cp : originalArr) {
+            if (cp instanceof Pawn) {
+                Pawn originalPawn = (Pawn) cp;
+                Pawn newPawn = new Pawn(originalPawn);
+                newArr.add(newPawn);
+            }
+            if (cp instanceof Rook) {
+                Rook originalRook = (Rook) cp;
+                Rook newRook = new Rook(originalRook);
+                newArr.add(newRook);
+             }
+            if (cp instanceof Knight) {
+                Knight originalKnight = (Knight) cp;
+                Knight newKnight = new Knight(originalKnight);
+                newArr.add(newKnight);
+            }
+            if (cp instanceof Bishop) {
+                Bishop originalBishop = (Bishop) cp;
+                Bishop newBishop = new Bishop(originalBishop);
+                newArr.add(newBishop);
+            }
+            if (cp instanceof Queen) {
+                Queen originalQueen = (Queen) cp;
+                Queen newQueen = new Queen(originalQueen);
+                newArr.add(newQueen);
+            }
+            if (cp instanceof King) {
+                King originalKing = (King) cp;
+                King newKing = new King(originalKing);
+                if (newKing.getColor() == 'w') {
+                    this.whiteKing = newKing;
+                } else {
+                    this.blackKing = newKing;
+                }
+                newArr.add(newKing);
+            }
+        }
+        setRooksForKingsFromNewArr(originalArr);
+    }
+
+    private void setRooksForKingsFromNewArr(ArrayList<ChessPiece> originalArr) {
+        King originalKing1 = null;
+        King originalKing2 = null;
+        King newKing1 = null;
+        King newKing2 = null;
+        //get two original kings:
+        for (ChessPiece cp : originalArr) {
+            if (cp instanceof King) {
+                if (originalKing1 == null) originalKing1 = (King) cp;
+                else originalKing2 = (King) cp;
+            }
+        }
+        //get two new kings:
+        for (ChessPiece cp : chessPieces) {
+            if (cp instanceof King) {
+                if (cp.getCurrentSquare().equals(originalKing1.getCurrentSquare())) {
+                    newKing1 = (King) cp;
+                }
+                else if (cp.getCurrentSquare().equals(originalKing2.getCurrentSquare())) {
+                    newKing2 = (King) cp;
+                }
+            }
+        }
+        //set rooks for new king:
+        for (ChessPiece cp : chessPieces) {
+            if (! (cp instanceof Rook)) continue;
+            if (originalKing1.getRightRook() != null) {
+                if (cp.getCurrentSquare().equals(originalKing1.getRightRook().getCurrentSquare())) {
+                    newKing1.setRightRook((Rook) cp);
+                }
+            }
+            if (originalKing1.getLeftRook() != null) {
+                if (cp.getCurrentSquare().equals(originalKing1.getLeftRook().getCurrentSquare())) {
+                    newKing1.setLeftRook((Rook) cp);
+                }
+            }
+            if (originalKing2.getRightRook() != null ) {
+                if (cp.getCurrentSquare().equals(originalKing2.getRightRook().getCurrentSquare())) {
+                    newKing2.setRightRook((Rook) cp);
+                }
+            }
+            if (originalKing2.getLeftRook() != null) {
+                if (cp.getCurrentSquare().equals(originalKing2.getLeftRook().getCurrentSquare())) {
+                    newKing2.setLeftRook((Rook) cp);
+                }
+            }
+
+        }
     }
 
     public ArrayList<ChessPiece> getChessPieces() {
@@ -44,6 +152,14 @@ public class ChessProcessor {
         if (possibleRightRook instanceof Rook && possibleRightRook.color == king.getColor()) {
             king.setRightRook((Rook) possibleRightRook);
         }
+    }
+
+    public King getWhiteKing() {
+        return whiteKing;
+    }
+
+    public King getBlackKing() {
+        return blackKing;
     }
 
     private ChessPiece getChessPieceBySquare(int row, int col) {
@@ -190,6 +306,24 @@ public class ChessProcessor {
         if (board[toRow][toCol].charAt(1) == 'p') {
             ((Pawn) chessPiece).setStillNotMoved(false);
         }
+        //if the move is castling (right side), make the required steps with the rook:
+        if (fromSquare.getRow() == toSquare.getRow() &&
+                toSquare.getCol() - fromSquare.getCol() == 2 &&
+                board[toSquare.getRow()][toSquare.getCol()].charAt(1) == 'k') {
+            int row = fromSquare.getRow();
+            int col = toSquare.getCol() - 1; //of rook after castling
+            Square originSquare = new Square(row, 7), targetSquare = new Square(row, col);
+            this.makeMove(originSquare, targetSquare);
+        }
+        //if the move is castling (left side), make the required steps with the rook:
+        if (fromSquare.getRow() == toSquare.getRow() &&
+                fromSquare.getCol() - toSquare.getCol() == 2 &&
+                board[toSquare.getRow()][toSquare.getCol()].charAt(1) == 'k') {
+            int row = fromSquare.getRow();
+            int col = toSquare.getCol() + 1; //of rook after castling
+            Square originSquare = new Square(row, 0), targetSquare = new Square(row, col);
+            this.makeMove(originSquare, targetSquare);
+        }
     }
 
     public void transformIntoQueen(Square square) {
@@ -278,17 +412,26 @@ public class ChessProcessor {
         return possibleSquares;
     }
 
-    public double negaMax(char color, String[][] board, Square fromSquare, Square toSquare, int depth, int n) {
+    public double negaMax(char color, Square fromSquare, Square toSquare, int depth, int n) {
         if (depth == 0) {
-            return evaluateChancesToWin(color, board);
+            return evaluateChancesToWin(color, this.board);
         }
         double max = Double.NEGATIVE_INFINITY;
-        ArrayList<Move> allMoves = getAllPossibleMoves(color, board);
+        ArrayList<Move> allMoves = getAllPossibleMoves(color, this.board);
         for (Move move : allMoves) {
-            String[][] possibleBoard = move.getBoardAfterMove();
-            ChessProcessor chessProcessorRec = new ChessProcessor(possibleBoard);
-            if (chessProcessorRec.evaluateChancesToWin(color, possibleBoard) < max) continue;
-            double score = (-1) * chessProcessorRec.negaMax(getRivalColor(color), possibleBoard, fromSquare, toSquare, depth - 1, n);
+            ChessProcessor chessProcessorRec = new ChessProcessor(this);
+            chessProcessorRec.makeMove(move.getFromSquare(), move.getToSquare());
+            if (chessProcessorRec.evaluateChancesToWin(color, chessProcessorRec.getBoard()) < max) continue;
+            double score = (-1) * chessProcessorRec.negaMax(getRivalColor(color), fromSquare, toSquare, depth - 1, n);
+            if (score == max && depth == n) {
+                int rnd = ThreadLocalRandom.current().nextInt(1, 2+1);
+                if (rnd == 1) {
+                    fromSquare.setRow(move.getFromSquare().getRow());
+                    fromSquare.setCol(move.getFromSquare().getCol());
+                    toSquare.setRow(move.getToSquare().getRow());
+                    toSquare.setCol(move.getToSquare().getCol());
+                }
+            }
             if (score > max) {
                 max = score;
                 if (depth == n) { //changing fromSquare&toSquare only in the outer layer of the recursion
@@ -302,18 +445,21 @@ public class ChessProcessor {
         return max;
     }
 
+    public String[][] getBoard() {
+        return this.board;
+    }
+
     public double evaluateChancesToWin(char color, String[][] board) {
         double piecesValues = sumValueOfPieces(color, board) - sumValueOfPieces(getRivalColor(color), board);
         double piecesMobility = getAllPossibleMoves(color, board).size() - getAllPossibleMoves(getRivalColor(color), board).size();
-        double kingSafety = evaluateKingSafety(color, board);
-        double checkValue = isBeingChecked(getRivalColor(color), board)? 8 : 0;
-        double ownCheckValue = isBeingChecked(color, board)? -8 : 0;
+        double kingSafety = evaluateKingSafety(color, board) - evaluateKingSafety(getRivalColor(color), board);
+        double checkValue = isBeingChecked(getRivalColor(color), board)? 500 : 0;
+        double ownCheckValue = isBeingChecked(color, board)? -500 : 0;
         double mateValue = isMated(getRivalColor(color), board)? Double.POSITIVE_INFINITY : 0;
         double ownMateValue = isMated(color, board)? Double.NEGATIVE_INFINITY : 0;
-        double piecesDeveloping = sumValueOfPieces(color, board);
-        double rivalPiecesDeveloping = sumValueOfPieces(getRivalColor(color), board);
+        double piecesDeveloping = piecesDeveloping(color, board) - piecesDeveloping(getRivalColor(color), board);
         //TODO continue
-        return piecesValues + 0.1*piecesMobility + 0.1*checkValue + 0.4*ownCheckValue + mateValue + ownMateValue + piecesDeveloping - rivalPiecesDeveloping;
+        return piecesValues*2000 + checkValue + ownCheckValue + mateValue + ownMateValue + kingSafety + 0.2* piecesMobility;
     }
 
     private double piecesDeveloping(char color, String[][] board) {
@@ -323,7 +469,7 @@ public class ChessProcessor {
                 if (board[i][j].charAt(0) == color) sumOfPiecesInMidBoard += 1;
             }
         }
-        return sumOfPiecesInMidBoard;
+        return sumOfPiecesInMidBoard * 300;
     }
 
     private double sumValueOfPieces(char color, String[][] board) {
@@ -373,19 +519,22 @@ public class ChessProcessor {
                 }
             }
         }
-        int fromRowIndex = Math.max(0, kingRow - 2);
-        int fromColIndex = Math.max(0, kingCol - 2);
-        int toRowIndex = Math.min(7, kingRow + 2);
-        int toColIndex = Math.min(7, kingCol + 2);
+/*        int fromRowIndex = Math.max(0, kingRow - 3);
+        int fromColIndex = Math.max(0, kingCol - 3);
+        int toRowIndex = Math.min(7, kingRow + 3);
+        int toColIndex = Math.min(7, kingCol + 3);
         for (int i = fromRowIndex; i <= toRowIndex; i++) {
             for (int j = fromColIndex; j <= toColIndex; j++) {
-                if (board[i][j].equals(color + "p")) safety+=50;
+                if (board[i][j].equals(color + "p")) safety++;
             }
         }
         for (int i = fromRowIndex; i <= toRowIndex; i++) {
-            for (int j = 0; j <= 7; j++) {
-                if (board[i][j].charAt(0) != color) safety-=50;
+            for (int j = fromColIndex; j <= toColIndex; j++) {
+                if (board[i][j].charAt(0) != color) safety-=2;
             }
+        }*/
+        if (kingCol < 2 || kingCol > 5) {
+            safety += 700;
         }
 
         return safety;
@@ -395,7 +544,7 @@ public class ChessProcessor {
         return color == 'w'? 'b' : 'w';
     }
 
-    private ArrayList<Move> getAllPossibleMoves(char color, String[][] board) {
+    public ArrayList<Move> getAllPossibleMoves(char color, String[][] board) {
         ArrayList<Move> allMoves = new ArrayList<>();
         for (ChessPiece cp : chessPieces) {
             if (cp.color == color) {

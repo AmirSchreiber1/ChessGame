@@ -7,6 +7,10 @@ public class Knight extends ChessPiece {
         super(color, currentSquare);
     }
 
+    public Knight(Knight knight) {
+        super(knight);
+    }
+
     @Override
     public ArrayList<Square> getPossibleSquares(String[][] board) {
         ArrayList<Square> possibleSquares = new ArrayList<>();

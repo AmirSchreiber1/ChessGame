@@ -3,6 +3,7 @@ package com.example.chessgame;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Intent;
 import android.graphics.Typeface;
@@ -26,26 +27,26 @@ import java.util.concurrent.ThreadLocalRandom;
 public class GameActivity extends AppCompatActivity {
     String[] colsToLetters = {"a", "b", "c", "d", "e", "f", "g", "h"};
     String[][] startingBoardWhite =
-            {{"br","bn","bb","bq","bk","bb","bn","br"},
-            {"bp","bp","bp","bp","bp","bp","bp","bp"},
-            {"_","_","_","_","_","_","_","_"},
-            {"_","_","_","_","_","_","_","_"},
-            {"_","_","_","_","_","_","_","_"},
-            {"_","_","_","_","_","_","_","_"},
-            {"wp","wp","wp","wp","wp","wp","wp","wp"},
-            {"wr","wn","wb","wq","wk","wb","wn","wr"}};
+            {{"br", "bn", "bb", "bq", "bk", "bb", "bn", "br"},
+                    {"bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"},
+                    {"_", "_", "_", "_", "_", "_", "_", "_"},
+                    {"_", "_", "_", "_", "_", "_", "_", "_"},
+                    {"_", "_", "_", "_", "_", "_", "_", "_"},
+                    {"_", "_", "_", "_", "_", "_", "_", "_"},
+                    {"wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"},
+                    {"wr", "wn", "wb", "wq", "wk", "wb", "wn", "wr"}};
     String[][] startingBoardBlack =
-            {{"wr","wn","wb","wk","wq","wb","wn","wr"},
-            {"wp","wp","wp","wp","wp","wp","wp","wp"},
-            {"_","_","_","_","_","_","_","_"},
-            {"_","_","_","_","_","_","_","_"},
-            {"_","_","_","_","_","_","_","_"},
-            {"_","_","_","_","_","_","_","_"},
-            {"bp","bp","bp","bp","bp","bp","bp","bp"},
-            {"br","bn","bb","bk","bq","bb","bn","br"}};
+            {{"wr", "wn", "wb", "wk", "wq", "wb", "wn", "wr"},
+                    {"wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"},
+                    {"_", "_", "_", "_", "_", "_", "_", "_"},
+                    {"_", "_", "_", "_", "_", "_", "_", "_"},
+                    {"_", "_", "_", "_", "_", "_", "_", "_"},
+                    {"_", "_", "_", "_", "_", "_", "_", "_"},
+                    {"bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"},
+                    {"br", "bn", "bb", "bk", "bq", "bb", "bn", "br"}};
     String[][] board = null;
     Square currentlyPressed1 = new Square(-1, -1); //-1,-1 means there isn't a square pressed
-    Square currentlyPressed2 =  new Square(-1, -1); //2 is for highlighting 2 squares after making a move
+    Square currentlyPressed2 = new Square(-1, -1); //2 is for highlighting 2 squares after making a move
     Square currentlyPressedRival1 = new Square(-1, -1);
     Square currentlyPressedRival2 = new Square(-1, -1);
     int clockTimeChoice;
@@ -66,6 +67,8 @@ public class GameActivity extends AppCompatActivity {
 
     Dialog dialog;
 
+    boolean gameIsFinished = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -78,22 +81,23 @@ public class GameActivity extends AppCompatActivity {
         isWhite = ThreadLocalRandom.current().nextInt(1, 2 + 1);
         if (isWhite == 1) {
             board = startingBoardWhite;
+        } else {
+            board = startingBoardBlack;
         }
-        else {
-            board = startingBoardBlack;}
         setBoard(board);
         chessProcessor = new ChessProcessor(board);
         setTimers();
         pressedSquareBg = ContextCompat.getDrawable(this, R.drawable.pressed_square);
 
     }
-    private void setTimers(){
+
+    private void setTimers() {
         Typeface timerFont = Typeface.createFromAsset(getAssets(), "font/digital-7.ttf");
         upperTimerTV.setTypeface(timerFont);
         bottomTimerTV.setTypeface(timerFont);
         String startingTime = null;
         int startingTimeMillis = 0;
-        switch(clockTimeChoice) {
+        switch (clockTimeChoice) {
             case 1:
                 startingTime = "02:00";
                 startingTimeMillis = 2 * 60 * 1000;
@@ -117,19 +121,18 @@ public class GameActivity extends AppCompatActivity {
         }
         upperTimerTV.setText(startingTime);
         bottomTimerTV.setText(startingTime);
-        if (isWhite == 1)  {
+        if (isWhite == 1) {
             timeLeftBottom = startingTimeMillis + 100;
             timeLeftUp = startingTimeMillis;
             playOwnTurn();
-        }
-        else {
+        } else {
             timeLeftBottom = startingTimeMillis;
             timeLeftUp = startingTimeMillis + 100;
             playRivalTurn();
         }
     }
 
-    private void setBoard(String[][] startingBoard){
+    private void setBoard(String[][] startingBoard) {
         for (int row = 0; row <= 7; row++) {
             for (int col = 0; col <= 7; col++) {
                 // each square (including chess piece if any) is a FrameLayout (enabling stacking 2 views)
@@ -148,10 +151,10 @@ public class GameActivity extends AppCompatActivity {
                 //indexes (displayed via TextViews):
                 if (col == 0) {
                     TextView index = new TextView(this);
-                    index.setText(String.valueOf(8-row));
+                    index.setText(String.valueOf(8 - row));
                     index.setTextSize(12);
                     FrameLayout.LayoutParams indexParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-                    indexParams.setMargins(3,0,0,0);
+                    indexParams.setMargins(3, 0, 0, 0);
                     indexParams.gravity = Gravity.START | Gravity.TOP;
                     index.setLayoutParams(indexParams);
                     fl.addView(index);
@@ -161,7 +164,7 @@ public class GameActivity extends AppCompatActivity {
                     index.setText(colsToLetters[col]);
                     index.setTextSize(12);
                     FrameLayout.LayoutParams indexParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT);
-                    indexParams.setMargins(0,0,3,0);
+                    indexParams.setMargins(0, 0, 3, 0);
                     indexParams.gravity = Gravity.END | Gravity.BOTTOM;
                     index.setLayoutParams(indexParams);
                     fl.addView(index);
@@ -169,7 +172,7 @@ public class GameActivity extends AppCompatActivity {
 
                 // the chess pieces are ImageViews:
                 String squareContent = startingBoard[row][col];
-                if (!(squareContent.equals("_"))){
+                if (!(squareContent.equals("_"))) {
                     ImageView chessPiece = getPieceFromString(squareContent);
                     fl.addView(chessPiece);
                 }
@@ -189,7 +192,7 @@ public class GameActivity extends AppCompatActivity {
 
     private ImageView getPieceFromString(String squareContent) {
         ImageView chessPiece = new ImageView(this);
-        switch(squareContent) {
+        switch (squareContent) {
             case "br":
                 chessPiece.setImageResource(R.drawable.black_rook);
                 break;
@@ -234,6 +237,7 @@ public class GameActivity extends AppCompatActivity {
         int squareIndex = chessBoard.indexOfChild(fl);
         int row = squareIndex / 8, col = squareIndex % 8;
         fl.setOnClickListener(view -> {
+            if (gameIsFinished) return;
             char ownColor = 0; //can be 'w' or 'b'
             if (isBottomTurn == 1) { //respond to clicks only when user's turn
                 if (isWhite == 1) { //get first char of user's color (is used later):
@@ -248,7 +252,7 @@ public class GameActivity extends AppCompatActivity {
 
                 if (currentlyPressed1.getRow() == -1) { //if no square is previously pressed:
                     //don't let user recolor last square rival moved a piece to
-                    if (new Square(row,col).equals(currentlyPressedRival2) &&
+                    if (new Square(row, col).equals(currentlyPressedRival2) &&
                             !(highlightedSquares.contains(currentlyPressedRival2))) {
                         return;
                     }
@@ -269,7 +273,7 @@ public class GameActivity extends AppCompatActivity {
                 else if (currentlyPressed1.getRow() == row && currentlyPressed1.getCol() == col) { //if already-chosen square is pressed, un-choose it:
                     cleanChoice(fl, row, col);
                 } else { //if there is a chosen square and user chooses another one:
-                    if (highlightedSquares.contains(new Square (row, col))) {
+                    if (highlightedSquares.contains(new Square(row, col))) {
                         currentlyPressed2.setRow(row);
                         currentlyPressed2.setCol(col);
                         fl.setBackground(pressedSquareBg);
@@ -278,18 +282,17 @@ public class GameActivity extends AppCompatActivity {
                     }
                     // else, if an un-highlighted square with no chess-piece is chosen, clean previous choice:
                     else if (this.board[row][col].equals("_")) {
-                        FrameLayout alreadyChosen_fl = (FrameLayout) chessBoard.getChildAt(currentlyPressed1.getRow()*8 + currentlyPressed1.getCol());
+                        FrameLayout alreadyChosen_fl = (FrameLayout) chessBoard.getChildAt(currentlyPressed1.getRow() * 8 + currentlyPressed1.getCol());
                         cleanChoice(alreadyChosen_fl, currentlyPressed1.getRow(), currentlyPressed1.getCol());
-                    }
-                    else { //else, another piece is chosen, change choice:
-                        if (new Square(row,col).equals(currentlyPressedRival2) &&
+                    } else { //else, another piece is chosen, change choice:
+                        if (new Square(row, col).equals(currentlyPressedRival2) &&
                                 !(highlightedSquares.contains(currentlyPressedRival2))) {
-                            FrameLayout alreadyChosen_fl = (FrameLayout) chessBoard.getChildAt(currentlyPressed1.getRow()*8 + currentlyPressed1.getCol());
+                            FrameLayout alreadyChosen_fl = (FrameLayout) chessBoard.getChildAt(currentlyPressed1.getRow() * 8 + currentlyPressed1.getCol());
                             cleanChoice(alreadyChosen_fl, currentlyPressed1.getRow(), currentlyPressed1.getCol());
                             return;
                         }
                         // clean previous choice:
-                        FrameLayout alreadyChosen_fl = (FrameLayout) chessBoard.getChildAt(currentlyPressed1.getRow()*8 + currentlyPressed1.getCol());
+                        FrameLayout alreadyChosen_fl = (FrameLayout) chessBoard.getChildAt(currentlyPressed1.getRow() * 8 + currentlyPressed1.getCol());
                         cleanChoice(alreadyChosen_fl, currentlyPressed1.getRow(), currentlyPressed1.getCol());
                         //choose new square:
                         currentlyPressed1.setRow(row);
@@ -360,7 +363,7 @@ public class GameActivity extends AppCompatActivity {
     private void generateMove(FrameLayout fl) {
         Square fromSquare = new Square(currentlyPressed1), toSquare = new Square(currentlyPressed2);
         chessProcessor.makeMove(fromSquare, toSquare);
-        updateBoardVisually(fromSquare, toSquare, fl);
+        updateBoardVisually(fromSquare, toSquare, fl, false);
         //if the move is castling (right side), make the required steps with the rook:
         if (fromSquare.getRow() == toSquare.getRow() &&
                 toSquare.getCol() - fromSquare.getCol() == 2 &&
@@ -368,9 +371,8 @@ public class GameActivity extends AppCompatActivity {
             int row = fromSquare.getRow();
             int col = toSquare.getCol() - 1; //of rook after castling
             Square originSquare = new Square(row, 7), targetSquare = new Square(row, col);
-            chessProcessor.makeMove(originSquare, targetSquare);
             FrameLayout target_fl = (FrameLayout) chessBoard.getChildAt(row * 8 + col);
-            updateBoardVisually(originSquare, targetSquare, target_fl);
+            updateBoardVisually(originSquare, targetSquare, target_fl, true);
         }
         //if the move is castling (left side), make the required steps with the rook:
         if (fromSquare.getRow() == toSquare.getRow() &&
@@ -379,19 +381,20 @@ public class GameActivity extends AppCompatActivity {
             int row = fromSquare.getRow();
             int col = toSquare.getCol() + 1; //of rook after castling
             Square originSquare = new Square(row, 0), targetSquare = new Square(row, col);
-            chessProcessor.makeMove(originSquare, targetSquare);
             FrameLayout target_fl = (FrameLayout) chessBoard.getChildAt(row * 8 + col);
-            updateBoardVisually(originSquare, targetSquare, target_fl);
+            updateBoardVisually(originSquare, targetSquare, target_fl, true);
         }
     }
 
-    private void updateBoardVisually(Square fromSquare, Square toSquare, FrameLayout to_fl) {
+    private void updateBoardVisually(Square fromSquare, Square toSquare, FrameLayout to_fl, boolean isCastlingComplement) {
+        if (gameIsFinished) return;
         //when rival is making his move, reset own previously chosen squares, and color rival's chosen squares:
         if (isBottomTurn == 0) {
             reSetPreviouslyChosenSquares(currentlyPressed1, currentlyPressed2, false);
             colorRivalChosenSquares();
         } else { //when user is making his move, reset rival's previously chosen squares:
-            if (currentlyPressedRival1.getRow() != -1) reSetPreviouslyChosenSquares(currentlyPressedRival1, currentlyPressedRival2, true);
+            if (currentlyPressedRival1.getRow() != -1)
+                reSetPreviouslyChosenSquares(currentlyPressedRival1, currentlyPressedRival2, true);
         }
         //the animation itself:
         FrameLayout parentView = findViewById(R.id.parent_view);
@@ -400,13 +403,13 @@ public class GameActivity extends AppCompatActivity {
         FrameLayout origin_fl = (FrameLayout) chessBoard.getChildAt(fromRow * 8 + fromCol);
         ImageView cpView = (ImageView) origin_fl.getChildAt(origin_fl.getChildCount() - 1);
         addViewToParentViewGroup(cpView, origin_fl);
-        View targetView = chessBoard.getChildAt(toRow* 8 + toCol);
+        View targetView = chessBoard.getChildAt(toRow * 8 + toCol);
         int[] targetLocation = new int[2];
         targetView.getLocationOnScreen(targetLocation);
         ImageView newViewForBoard = getPieceFromString(board[toRow][toCol]);
         cpView.animate()
                 .translationX(targetLocation[0])
-                .translationY(targetLocation[1] - chessBoard.getHeight()/12)
+                .translationY(targetLocation[1] - chessBoard.getHeight() / 12)
                 .setDuration(250) // Set the duration of the animation in milliseconds
                 .withEndAction(() -> {
                     parentView.removeView(cpView);
@@ -428,7 +431,7 @@ public class GameActivity extends AppCompatActivity {
                         to_fl.addView(newViewForBoard);
                     }
                     //check if mate/draw/stale-mate:
-                    char possibleLoserColor = board[toRow][toCol].charAt(0) == 'w'? 'b' : 'w';
+                    char possibleLoserColor = board[toRow][toCol].charAt(0) == 'w' ? 'b' : 'w';
                     if (chessProcessor.isMated(possibleLoserColor, board)) {
                         announceWinner(color);
                         return;
@@ -437,8 +440,8 @@ public class GameActivity extends AppCompatActivity {
                         announceDraw();
                         return;
                     }
-                    // if not, change turns:
-                    changeTurns();
+                    // if not, and move isn't castling complement, change turns:
+                    if (!isCastlingComplement) changeTurns();
                 })
                 .start();
     }
@@ -449,7 +452,7 @@ public class GameActivity extends AppCompatActivity {
         int[] originalPosition = new int[2];
         cpView.getLocationOnScreen(originalPosition);
         int originalX = originalPosition[0];
-        int originalY = originalPosition[1] - chessBoard.getHeight()/12;
+        int originalY = originalPosition[1] - chessBoard.getHeight() / 12;
         origin_fl.removeView(cpView);
         ViewGroup.LayoutParams layoutParams = cpView.getLayoutParams();
         layoutParams.width = width;
@@ -461,14 +464,26 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void playRivalTurn() {
+        if (gameIsFinished) return;
         isBottomTurn = 0;
         if (!(isUnlimited == 1)) resumeTimer(timeLeftUp, false);
-        char rivalColor = isWhite == 1? 'b' : 'w';
+        char rivalColor = isWhite == 1 ? 'b' : 'w';
         new Thread(() -> {
             Square fromSquare = new Square(-1, -1), toSquare = new Square(-1, -1);
             //get next move into fromSquare, toSquare:
             int depth = 3;
-            chessProcessor.negaMax(rivalColor, board, fromSquare, toSquare, depth, depth);
+            if ((!(isUnlimited == 1)) && timeLeftUp < 90 * 1000) depth = 2; //rival plays faster if time left is less than 01:30
+            chessProcessor.negaMax(rivalColor, fromSquare, toSquare, depth, depth);
+            if (fromSquare.getRow() == -1) { //negaMax hasn't found a better move (mate is near).
+                // in this case, choose randomly from one of the possible moves.
+                ArrayList<Move> allMoves = chessProcessor.getAllPossibleMoves(rivalColor, board);
+                int index = ThreadLocalRandom.current().nextInt(0, allMoves.size());
+                Move move = allMoves.get(index);
+                fromSquare.setRow(move.getFromSquare().getRow());
+                fromSquare.setCol(move.getFromSquare().getCol());
+                toSquare.setRow(move.getToSquare().getRow());
+                toSquare.setCol(move.getToSquare().getCol());
+            }
             int fromRow = fromSquare.getRow(), fromCol = fromSquare.getCol(),
                     toRow = toSquare.getRow(), toCol = toSquare.getCol();
             chessProcessor.makeMove(fromSquare, toSquare);
@@ -477,30 +492,28 @@ public class GameActivity extends AppCompatActivity {
                 currentlyPressedRival1.setCol(fromCol);
                 currentlyPressedRival2.setRow(toRow);
                 currentlyPressedRival2.setCol(toCol);
-                updateBoardVisually(fromSquare, toSquare, (FrameLayout) chessBoard.getChildAt(toRow * 8 + toCol));
+                updateBoardVisually(fromSquare, toSquare, (FrameLayout) chessBoard.getChildAt(toRow * 8 + toCol), false);
+                //if the move is castling (right side), make the required steps with the rook:
+                if (fromSquare.getRow() == toSquare.getRow() &&
+                        toSquare.getCol() - fromSquare.getCol() == 2 &&
+                        board[toSquare.getRow()][toSquare.getCol()].charAt(1) == 'k') {
+                    int row = fromSquare.getRow();
+                    int col = toSquare.getCol() - 1; //of rook after castling
+                    Square originSquare = new Square(row, 7), targetSquare = new Square(row, col);
+                    FrameLayout target_fl = (FrameLayout) chessBoard.getChildAt(row * 8 + col);
+                    updateBoardVisually(originSquare, targetSquare, target_fl, true);
+                }
+                //if the move is castling (left side), make the required steps with the rook:
+                if (fromSquare.getRow() == toSquare.getRow() &&
+                        fromSquare.getCol() - toSquare.getCol() == 2 &&
+                        board[toSquare.getRow()][toSquare.getCol()].charAt(1) == 'k') {
+                    int row = fromSquare.getRow();
+                    int col = toSquare.getCol() + 1; //of rook after castling
+                    Square originSquare = new Square(row, 0), targetSquare = new Square(row, col);
+                    FrameLayout target_fl = (FrameLayout) chessBoard.getChildAt(row * 8 + col);
+                    updateBoardVisually(originSquare, targetSquare, target_fl, true);
+                }
             });
-            //if the move is castling (right side), make the required steps with the rook:
-            if (fromSquare.getRow() == toSquare.getRow() &&
-                    toSquare.getCol() - fromSquare.getCol() == 2 &&
-                    board[toSquare.getRow()][toSquare.getCol()].charAt(1) == 'k') {
-                int row = fromSquare.getRow();
-                int col = toSquare.getCol() - 1; //of rook after castling
-                Square originSquare = new Square(row, 7), targetSquare = new Square(row, col);
-                chessProcessor.makeMove(originSquare, targetSquare);
-                FrameLayout target_fl = (FrameLayout) chessBoard.getChildAt(row * 8 + col);
-                updateBoardVisually(originSquare, targetSquare, target_fl);
-            }
-            //if the move is castling (left side), make the required steps with the rook:
-            if (fromSquare.getRow() == toSquare.getRow() &&
-                    fromSquare.getCol() - toSquare.getCol() == 2 &&
-                    board[toSquare.getRow()][toSquare.getCol()].charAt(1) == 'k') {
-                int row = fromSquare.getRow();
-                int col = toSquare.getCol() + 1; //of rook after castling
-                Square originSquare = new Square(row, 0), targetSquare = new Square(row, col);
-                chessProcessor.makeMove(originSquare, targetSquare);
-                FrameLayout target_fl = (FrameLayout) chessBoard.getChildAt(row * 8 + col);
-                updateBoardVisually(originSquare, targetSquare, target_fl);
-            }
         }).start();
     }
 
@@ -529,12 +542,12 @@ public class GameActivity extends AppCompatActivity {
                 long sec = (millisUntilFinished / 1000) % 60;
                 if (isBottomTimer) {
                     bottomTimerTV.setText(f.format(min) + ":" + f.format(sec));
-                }
-                else {
+                } else {
                     upperTimerTV.setText(f.format(min) + ":" + f.format(sec));
                 }
 
             }
+
             public void onFinish() {
                 char winnerColor = 0;
                 if (isBottomTimer) {
@@ -569,7 +582,7 @@ public class GameActivity extends AppCompatActivity {
         if (fl1 != null) {
             setOriginalBackgroundByIndex(fl1, row1, col1);
         }
-        if (fl2 != null ) {
+        if (fl2 != null) {
             if (!isOfRival || !(currentlyPressed2.equals(square2))) {
                 setOriginalBackgroundByIndex(fl2, row2, col2);
             }
@@ -590,7 +603,8 @@ public class GameActivity extends AppCompatActivity {
     }
 
     private void announceWinner(char color) {
-        //stoptimers:
+        gameIsFinished = true;
+        //stop timers:
         this.timer.cancel();
         unhighlightSquares();
         dialog = new Dialog(this);
@@ -607,8 +621,10 @@ public class GameActivity extends AppCompatActivity {
         //create and start the dialog:
         displayDialog(dialog);
     }
+
     private void announceDraw() {
-        //stoptimers:
+        gameIsFinished = true;
+        //stop timers:
         this.timer.cancel();
         unhighlightSquares();
         dialog = new Dialog(this);
@@ -650,13 +666,14 @@ public class GameActivity extends AppCompatActivity {
 
 
     private void displayDialog(Dialog dialog) {
-        dialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        dialog.setCancelable(false);
-        dialog.getWindow().getAttributes().windowAnimations = R.style.animation;
-        dialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.dialog_bg));
-        dialog.show();
+        if (!((Activity) this).isFinishing()) {
+            dialog.getWindow().setLayout(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            dialog.setCancelable(false);
+            dialog.getWindow().getAttributes().windowAnimations = R.style.animation;
+            dialog.getWindow().setBackgroundDrawable(getDrawable(R.drawable.dialog_bg));
+            dialog.show();
+        }
     }
-
-    //TODO add sounds
-
 }
+
+//TODO add sounds

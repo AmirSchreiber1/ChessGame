@@ -12,6 +12,18 @@ public class King extends ChessPiece {
         this.stillNotMoved = true;
     }
 
+    public King(King king) {
+        super(king);
+        this.stillNotMoved = king.getStillNotMoved();
+    }
+
+    public Rook getRightRook() {
+        return rightRook;
+    }
+
+    public Rook getLeftRook() {
+        return leftRook;
+    }
 
     public boolean getStillNotMoved() {
         return stillNotMoved;

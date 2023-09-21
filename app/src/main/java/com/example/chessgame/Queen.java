@@ -8,6 +8,10 @@ public class Queen extends ChessPiece {
         super(color, currentSquare);
     }
 
+    public Queen(Queen queen) {
+        super(queen);
+    }
+
     @Override
     public ArrayList<Square> getPossibleSquares(String[][] board) {
         ArrayList<Square> possibleSquares = new ArrayList<>();

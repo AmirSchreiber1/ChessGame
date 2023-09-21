@@ -14,6 +14,12 @@ public abstract class ChessPiece {
         this.isAlive = true;
     }
 
+    public ChessPiece(ChessPiece chessPiece) {
+        this.color = chessPiece.getColor();
+        this.currentSquare = new Square(chessPiece.getCurrentSquare());
+        this.isAlive = chessPiece.isAlive();
+    }
+
     public char getColor() {
         return color;
     }
