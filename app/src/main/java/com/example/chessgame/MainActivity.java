@@ -35,6 +35,11 @@ public class MainActivity extends AppCompatActivity {
             intent.putExtra("currChoice", currChoice);
             startActivityForResult(intent, 2);
         });
+        playButton.setOnClickListener(view -> {
+            Intent intent = new Intent(this, GameActivity.class);
+            intent.putExtra("clockTimeChoice", currChoice);
+            startActivity(intent);
+        });
     }
 
     private void setFonts(){
@@ -54,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
         // check if the request code is same as what is passed  here it is 2
         if(requestCode==2)
         {
+            if (data == null) return;
             currChoice=data.getIntExtra("clockTimeChoice", 3);
             String clockTimeStr = null;
             switch(currChoice) {

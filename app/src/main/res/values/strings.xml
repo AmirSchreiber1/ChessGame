@@ -17,4 +17,6 @@
     <string name="bullet_symbol"><![CDATA[<]]></string>
     <string name="infinity_symbol">∞</string>
     <string name="rapidClockTimeStr">Clock Time: 10:00</string>
+    <string name="rematch">Rematch</string>
+    <string name="x">x</string>
 </resources>
