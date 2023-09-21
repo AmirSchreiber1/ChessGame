@@ -604,7 +604,7 @@ public class GameActivity extends AppCompatActivity {
     private void announceWinner(char color) {
         gameIsFinished = true;
         //stop timers:
-        this.timer.cancel();
+        if (!(isUnlimited == 1)) this.timer.cancel();
         unhighlightSquares();
         dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_box);
@@ -624,7 +624,7 @@ public class GameActivity extends AppCompatActivity {
     private void announceDraw() {
         gameIsFinished = true;
         //stop timers:
-        this.timer.cancel();
+        if (!(isUnlimited == 1)) this.timer.cancel();
         unhighlightSquares();
         dialog = new Dialog(this);
         dialog.setContentView(R.layout.dialog_box);

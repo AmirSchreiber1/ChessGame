@@ -409,7 +409,37 @@ public class ChessProcessor {
                 possibleSquares.remove(possibleSquare);
             }
         }
+        //also (for king), if is checked castling isn't possible.
+        //and, if one of side squares is threatened, castling to that side isn't possible:
+        if (chessPiece instanceof King) {
+            removePossibleCastlingSquares((King)chessPiece, possibleSquares);
+        }
         return possibleSquares;
+    }
+
+    private void removePossibleCastlingSquares(King king, ArrayList<Square> possibleSquares) {
+        int kingRow = king.getCurrentSquare().getRow(), kingCol = king.getCurrentSquare().getCol();
+        ArrayList<Square> squares = new ArrayList<>(possibleSquares); //copy array to iterate on (so changes and deletions on possibleSquares are possible).
+        if (isBeingChecked(king.getColor(), board)) {
+            if (possibleSquares.contains(new Square(kingRow, kingCol - 2))) {
+                possibleSquares.remove(new Square(kingRow, kingCol - 2));
+            }
+            if (possibleSquares.contains(new Square(kingRow, kingCol + 2))) {
+                possibleSquares.remove(new Square(kingRow, kingCol + 2));
+            }
+        }
+        else { //else, if isn't checked but one of side squares is threatened, castling to that side isn't possible:
+            if (possibleSquares.contains(new Square(kingRow, kingCol - 2))) {
+                if (!(possibleSquares.contains(new Square(kingRow, kingCol - 1)))) {
+                    possibleSquares.remove(new Square(kingRow, kingCol - 2));
+                }
+            }
+            if (possibleSquares.contains(new Square(kingRow, kingCol + 2))) {
+                if (!(possibleSquares.contains(new Square(kingRow, kingCol + 1)))) {
+                    possibleSquares.remove(new Square(kingRow, kingCol + 2));
+                }
+            }
+        }
     }
 
     public double negaMax(char color, Square fromSquare, Square toSquare, int depth, int n) {
@@ -453,13 +483,13 @@ public class ChessProcessor {
         double piecesValues = sumValueOfPieces(color, board) - sumValueOfPieces(getRivalColor(color), board);
         double piecesMobility = getAllPossibleMoves(color, board).size() - getAllPossibleMoves(getRivalColor(color), board).size();
         double kingSafety = evaluateKingSafety(color, board) - evaluateKingSafety(getRivalColor(color), board);
-        double checkValue = isBeingChecked(getRivalColor(color), board)? 500 : 0;
-        double ownCheckValue = isBeingChecked(color, board)? -500 : 0;
+        double checkValue = isBeingChecked(getRivalColor(color), board)? 1000 : 0;
+        double ownCheckValue = isBeingChecked(color, board)? - 1000 : 0;
         double mateValue = isMated(getRivalColor(color), board)? Double.POSITIVE_INFINITY : 0;
         double ownMateValue = isMated(color, board)? Double.NEGATIVE_INFINITY : 0;
         double piecesDeveloping = piecesDeveloping(color, board) - piecesDeveloping(getRivalColor(color), board);
         //TODO continue
-        return piecesValues*2000 + checkValue + ownCheckValue + mateValue + ownMateValue + kingSafety + piecesMobility + 10*piecesDeveloping;
+        return piecesValues*2000 + checkValue + ownCheckValue + mateValue + ownMateValue + 1000*piecesDeveloping;
     }
 
     private double piecesDeveloping(char color, String[][] board) {
