@@ -454,7 +454,7 @@ public class ChessProcessor {
             if (chessProcessorRec.evaluateChancesToWin(color, chessProcessorRec.getBoard()) < max) continue;
             double score = (-1) * chessProcessorRec.negaMax(getRivalColor(color), fromSquare, toSquare, depth - 1, n);
             if (score == max && depth == n) {
-                int rnd = ThreadLocalRandom.current().nextInt(1, 2+1);
+                int rnd = ThreadLocalRandom.current().nextInt(1, 3);
                 if (rnd == 1) {
                     fromSquare.setRow(move.getFromSquare().getRow());
                     fromSquare.setCol(move.getFromSquare().getCol());
@@ -489,7 +489,7 @@ public class ChessProcessor {
         double ownMateValue = isMated(color, board)? Double.NEGATIVE_INFINITY : 0;
         double piecesDeveloping = piecesDeveloping(color, board) - piecesDeveloping(getRivalColor(color), board);
         //TODO continue
-        return piecesValues*2000 + checkValue + ownCheckValue + mateValue + ownMateValue + 1000*piecesDeveloping;
+        return piecesValues*1000 + checkValue + ownCheckValue + mateValue + ownMateValue + 10*piecesDeveloping + piecesMobility + kingSafety;
     }
 
     private double piecesDeveloping(char color, String[][] board) {
@@ -499,7 +499,7 @@ public class ChessProcessor {
                 if (board[i][j].charAt(0) == color) sumOfPiecesInMidBoard += 1;
             }
         }
-        return sumOfPiecesInMidBoard * 300;
+        return sumOfPiecesInMidBoard;
     }
 
     private double sumValueOfPieces(char color, String[][] board) {
@@ -549,22 +549,22 @@ public class ChessProcessor {
                 }
             }
         }
-/*        int fromRowIndex = Math.max(0, kingRow - 3);
-        int fromColIndex = Math.max(0, kingCol - 3);
+        int fromRowIndex = Math.max(0, kingRow - 3);
         int toRowIndex = Math.min(7, kingRow + 3);
-        int toColIndex = Math.min(7, kingCol + 3);
+        int fromColIndex = Math.max(0, kingCol - 2);
+        int toColIndex = Math.min(7, kingCol + 2);
         for (int i = fromRowIndex; i <= toRowIndex; i++) {
             for (int j = fromColIndex; j <= toColIndex; j++) {
-                if (board[i][j].equals(color + "p")) safety++;
+                if (board[i][j].charAt(0) == color) safety+=10;
             }
         }
         for (int i = fromRowIndex; i <= toRowIndex; i++) {
-            for (int j = fromColIndex; j <= toColIndex; j++) {
-                if (board[i][j].charAt(0) != color) safety-=2;
+            for (int j = 0; j < 8; j++) {
+                if (board[i][j].charAt(0) != color) safety-=20;
             }
-        }*/
+        }
         if (kingCol < 2 || kingCol > 5) {
-            safety += 50;
+            safety += 5;
         }
 
         return safety;
