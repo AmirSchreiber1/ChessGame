@@ -479,17 +479,17 @@ public class ChessProcessor {
         double pawnsScore = evaluatePawnsScore(color, board) - evaluatePawnsScore(getRivalColor(color), board);
         double checkValue;
         double ownCheckValue;
-        if (getNumOfPieces(color, board) < 10 || getNumOfPieces(getRivalColor(color), board) < 10) {
-            checkValue = isBeingChecked(getRivalColor(color), board) ? 1000 : 0;
-            ownCheckValue = isBeingChecked(color, board) ? -1000 : 0;
+        if (getNumOfPieces(getRivalColor(color), board) < 10) {
+            checkValue = isBeingChecked(getRivalColor(color), board) ? 3000 : 0;
+            ownCheckValue = isBeingChecked(color, board) ? -3000 : 0;
         } else {
-            checkValue = isBeingChecked(getRivalColor(color), board) ? 100 : 0;
-            ownCheckValue = isBeingChecked(color, board) ? -100 : 0;
+            checkValue = isBeingChecked(getRivalColor(color), board) ? 500 : 0;
+            ownCheckValue = isBeingChecked(color, board) ? -500 : 0;
         }
         double mateValue = isMated(getRivalColor(color), board) ? Double.POSITIVE_INFINITY : 0;
         double ownMateValue = isMated(color, board) ? Double.NEGATIVE_INFINITY : 0;
         double piecesDeveloping = piecesDeveloping(color, board) - piecesDeveloping(getRivalColor(color), board);
-        return 1500 * material + checkValue + ownCheckValue + mateValue + ownMateValue + 100*piecesDeveloping + 0.2*piecesMobility + kingSafety + 10*pawnsScore;
+        return 2000 * material + checkValue + ownCheckValue + mateValue + ownMateValue + 100*piecesDeveloping + 0.2*piecesMobility + kingSafety + 10*pawnsScore;
     }
 
     private double evaluatePawnsScore(char color, String[][] board) {
@@ -534,7 +534,7 @@ public class ChessProcessor {
         }
 
         if (emptyLineAhead) {
-            score += (7 - row)*20;
+            score += (7 - row);
         }
 
         return score;
@@ -568,7 +568,7 @@ public class ChessProcessor {
         }
 
         if (emptyLineAhead) {
-            score += (row)*20;
+            score += (row);
         }
 
         return score;
@@ -578,10 +578,9 @@ public class ChessProcessor {
         if (getNumOfPieces(color, board) < 10 || getNumOfPieces(getRivalColor(color), board) < 10)
             return 0;
         double developingScore = 0;
-        for (int i = 2; i < 6; i++) {
+        for (int i = 3; i < 5; i++) {
             for (int j = 0; j < 8; j++) {
-                if (board[i][j].equals(color + "p")) developingScore += 50;
-                else if (board[i][j].charAt(0) == color) developingScore += 45;
+                if (board[i][j].charAt(0) == color) developingScore++;
             }
         }
         return developingScore;
@@ -648,7 +647,7 @@ public class ChessProcessor {
                 }
             }
         }
-        int fromRowIndex = Math.max(0, kingRow - 3);
+/*        int fromRowIndex = Math.max(0, kingRow - 3);
         int toRowIndex = Math.min(7, kingRow + 3);
         int fromColIndex = Math.max(0, kingCol - 2);
         int toColIndex = Math.min(7, kingCol + 2);
@@ -661,7 +660,7 @@ public class ChessProcessor {
             for (int j = 0; j < 8; j++) {
                 if (board[i][j].charAt(0) != color) safety -= 2;
             }
-        }
+        }*/
         if (kingCol < 2 || kingCol > 5) {
             safety += 5;
         }
