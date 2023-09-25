@@ -14,7 +14,14 @@ The core algorithm employed to simulate a chess player (the opponent with whom t
 * Mobility: Evaluating the sum of all possible moves for each piece.
 * Piece Development: Offering bonuses for occupying the middle rows of the board, promoting active piece development.
 * King's Safety: Penalizing exposure to check and providing bonuses for the king being side-positioned, encouraging castling.
-* Pawn Structures: Penalizing double pawns while rewarding the potential for passed pawns, reflecting the importance of pawn structure in chess strategy.  
+* Pawn Structures: Penalizing double pawns while rewarding the potential for passed pawns, reflecting the importance of pawn structure in chess strategy.
+
+Screenshots:    
+<img src="app/src/main/assets/Images/Screenshot_20230925_161552_ChessGame.jpg" width="216" height="480" alt="MainMenu">
+<img src="app/src/main/assets/Images/Screenshot_20230925_161609_ChessGame.jpg" width="216" height="480" alt="MainMenu">
+<img src="app/src/main/assets/Images/Screenshot_20230925_161614_ChessGame.jpg" width="216" height="480" alt="MainMenu">
+<img src="app/src/main/assets/Images/Screenshot_20230925_161641_ChessGame.jpg" width="216" height="480" alt="MainMenu">
+
 
 SVG vectors used:
 * https://www.freepik.com/free-vector/chess_2900822.htm#query=chess&position=3&from_view=author (for the menu screen)
