@@ -9,7 +9,7 @@ The app offers four distinct game modes:
 * Rapid: A game with a 10-minute timer for more thoughtful moves.
 * Unlimited: A mode without any time restrictions, allowing for leisurely gameplay.
 
-The core algorithm employed to simulate a chess player (the opponent with whom the user plays) is the classic Minimax algorithm with a depth of 3. In particular, to take advantage of chess's symmetric nature, the Negamax algorithm is utilized, offering greater simplicity and convenience. The evaluation function used in this implementation is based on the following criteria:
+The core algorithm employed to simulate a chess player (the opponent with whom the user plays) is the classic Minimax algorithm. In particular, to take advantage of chess's symmetric nature, the Negamax algorithm is utilized, offering greater simplicity and convenience. The evaluation function used in this implementation is based on the following criteria:
 * Material Value: Assigning values to pieces (pawn=1, bishop&knight=3, rook=5, queen=9).
 * Mobility: Evaluating the sum of all possible moves for each piece.
 * Piece Development: Offering bonuses for occupying the middle rows of the board, promoting active piece development.
