@@ -1,6 +1,5 @@
 # ChessGame
 An implementation of the popular game in Java, as a mobile app.  
-Both the graphical user interface and the underlying algorithms have been developed entirely from scratch.
 
 **Version 1.0:**  
 The app offers four distinct game modes:
