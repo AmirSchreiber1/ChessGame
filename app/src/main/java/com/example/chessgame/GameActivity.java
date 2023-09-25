@@ -469,20 +469,19 @@ public class GameActivity extends AppCompatActivity {
         if (!(isUnlimited == 1)) resumeTimer(timeLeftUp, false);
         char rivalColor = isWhite == 1 ? 'b' : 'w';
         new Thread(() -> {
-            Square fromSquare = new Square(-1, -1), toSquare = new Square(-1, -1);
-            //get next move into fromSquare, toSquare:
-            int depth = 3;
-            chessProcessor.negaMax(rivalColor, fromSquare, toSquare, depth, depth);
-            if (fromSquare.getRow() == -1) { //negaMax hasn't found a better move (mate is near).
-                // in this case, choose randomly from one of the possible moves.
-                ArrayList<Move> allMoves = chessProcessor.getAllPossibleMoves(rivalColor, board);
-                int index = ThreadLocalRandom.current().nextInt(0, allMoves.size());
-                Move move = allMoves.get(index);
-                fromSquare.setRow(move.getFromSquare().getRow());
-                fromSquare.setCol(move.getFromSquare().getCol());
-                toSquare.setRow(move.getToSquare().getRow());
-                toSquare.setCol(move.getToSquare().getCol());
-            }
+            int depth = 3; //for negaMax
+            ArrayList<Move> possibleMoves = new ArrayList<>();
+            Square fromSquare = new Square(-1, -1), toSquare = new Square(-1, -1); //next move will be assigned to fromSquare&toSquare
+            chessProcessor.negaMax(rivalColor, depth, depth, possibleMoves);
+            // if negaMax hasn't found a move (mate is near) get all possible moves.
+            if (possibleMoves.size() == 0) possibleMoves = chessProcessor.getAllPossibleMoves(rivalColor, board);
+            // from the moves available (rather from negamax or from all moves), choose one randomly:
+            int index = ThreadLocalRandom.current().nextInt(0, possibleMoves.size());
+            Move move = possibleMoves.get(index);
+            fromSquare.setRow(move.getFromSquare().getRow());
+            fromSquare.setCol(move.getFromSquare().getCol());
+            toSquare.setRow(move.getToSquare().getRow());
+            toSquare.setCol(move.getToSquare().getCol());
             int fromRow = fromSquare.getRow(), fromCol = fromSquare.getCol(),
                     toRow = toSquare.getRow(), toCol = toSquare.getCol();
             chessProcessor.makeMove(fromSquare, toSquare);

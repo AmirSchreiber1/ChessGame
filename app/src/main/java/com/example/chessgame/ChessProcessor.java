@@ -1,4 +1,5 @@
 package com.example.chessgame;
+
 import android.graphics.Color;
 import android.util.Log;
 import android.widget.FrameLayout;
@@ -26,9 +27,9 @@ public class ChessProcessor {
         copyChessPieces(chessProcessor.getChessPieces(), this.chessPieces);
     }
 
-    private void copyBoard (String[][] originalBoard, String[][] newBoard) {
+    private void copyBoard(String[][] originalBoard, String[][] newBoard) {
         for (int i = 0; i < 8; i++) {
-            for (int j = 0; j <8; j++) {
+            for (int j = 0; j < 8; j++) {
                 newBoard[i][j] = originalBoard[i][j];
             }
         }
@@ -45,7 +46,7 @@ public class ChessProcessor {
                 Rook originalRook = (Rook) cp;
                 Rook newRook = new Rook(originalRook);
                 newArr.add(newRook);
-             }
+            }
             if (cp instanceof Knight) {
                 Knight originalKnight = (Knight) cp;
                 Knight newKnight = new Knight(originalKnight);
@@ -92,15 +93,14 @@ public class ChessProcessor {
             if (cp instanceof King) {
                 if (cp.getCurrentSquare().equals(originalKing1.getCurrentSquare())) {
                     newKing1 = (King) cp;
-                }
-                else if (cp.getCurrentSquare().equals(originalKing2.getCurrentSquare())) {
+                } else if (cp.getCurrentSquare().equals(originalKing2.getCurrentSquare())) {
                     newKing2 = (King) cp;
                 }
             }
         }
         //set rooks for new king:
         for (ChessPiece cp : chessPieces) {
-            if (! (cp instanceof Rook)) continue;
+            if (!(cp instanceof Rook)) continue;
             if (originalKing1.getRightRook() != null) {
                 if (cp.getCurrentSquare().equals(originalKing1.getRightRook().getCurrentSquare())) {
                     newKing1.setRightRook((Rook) cp);
@@ -111,7 +111,7 @@ public class ChessProcessor {
                     newKing1.setLeftRook((Rook) cp);
                 }
             }
-            if (originalKing2.getRightRook() != null ) {
+            if (originalKing2.getRightRook() != null) {
                 if (cp.getCurrentSquare().equals(originalKing2.getRightRook().getCurrentSquare())) {
                     newKing2.setRightRook((Rook) cp);
                 }
@@ -130,8 +130,8 @@ public class ChessProcessor {
     }
 
     public void setChessPieces() {
-        for (int row = 0; row < 8; row ++) {
-            for (int col = 0; col < 8; col ++) {
+        for (int row = 0; row < 8; row++) {
+            for (int col = 0; col < 8; col++) {
                 if (!(board[row][col].equals("_"))) {
                     ChessPiece chessPiece = getChessPieceFromString(board[row][col], row, col);
                     chessPieces.add(chessPiece);
@@ -186,7 +186,7 @@ public class ChessProcessor {
         char chessPieceType = squareContent.charAt(1);
         Square square = new Square(row, col);
         ChessPiece chessPiece = null;
-        switch(chessPieceType) {
+        switch (chessPieceType) {
             case 'r':
                 chessPiece = new Rook(color, square);
                 break;
@@ -250,7 +250,7 @@ public class ChessProcessor {
     private String[][] getBoardAfterPossibleMove(Square pressedSquare, Square possibleSquare, String[][] currBoard) {
         String[][] possibleBoard = new String[8][8];
         //copy current board to possible board:
-        for (int i = 0; i < 8; i ++) {
+        for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
                 possibleBoard[i][j] = currBoard[i][j];
             }
@@ -271,7 +271,7 @@ public class ChessProcessor {
             int col = toCol - 1; //of rook after castling
             possibleBoard[toRow][col] = possibleBoard[toRow][toCol].charAt(0) + "r";
             possibleBoard[toRow][7] = "_";
-            }
+        }
         if (fromRow == toRow && fromCol - toCol == 2 &&
                 possibleBoard[toRow][toCol].charAt(1) == 'k') {
             int col = toCol + 1; //of rook after castling
@@ -350,7 +350,7 @@ public class ChessProcessor {
     }
 
     public boolean isBeingChecked(char ownColor, String[][] board) {
-        char rivalColor = ownColor == 'w'? 'b' : 'w';
+        char rivalColor = ownColor == 'w' ? 'b' : 'w';
         for (ChessPiece cp : chessPieces) {
             if (cp.color == rivalColor && cp.isCheckingRivalKing(board, ownColor)) return true;
         }
@@ -385,7 +385,8 @@ public class ChessProcessor {
                 }
                 int row1 = bishop1.getCurrentSquare().getRow(), col1 = bishop1.getCurrentSquare().getCol(),
                         row2 = bishop2.currentSquare.getRow(), col2 = bishop2.getCurrentSquare().getCol();
-                if (bishop1.color != bishop2.color && (row1+col1+row2+col2)%2==0) return true;
+                if (bishop1.color != bishop2.color && (row1 + col1 + row2 + col2) % 2 == 0)
+                    return true;
             }
         }
         return false;
@@ -412,14 +413,13 @@ public class ChessProcessor {
         //also (for king), if is checked castling isn't possible.
         //and, if one of side squares is threatened, castling to that side isn't possible:
         if (chessPiece instanceof King) {
-            removePossibleCastlingSquares((King)chessPiece, possibleSquares);
+            removePossibleCastlingSquares((King) chessPiece, possibleSquares);
         }
         return possibleSquares;
     }
 
     private void removePossibleCastlingSquares(King king, ArrayList<Square> possibleSquares) {
         int kingRow = king.getCurrentSquare().getRow(), kingCol = king.getCurrentSquare().getCol();
-        ArrayList<Square> squares = new ArrayList<>(possibleSquares); //copy array to iterate on (so changes and deletions on possibleSquares are possible).
         if (isBeingChecked(king.getColor(), board)) {
             if (possibleSquares.contains(new Square(kingRow, kingCol - 2))) {
                 possibleSquares.remove(new Square(kingRow, kingCol - 2));
@@ -427,8 +427,7 @@ public class ChessProcessor {
             if (possibleSquares.contains(new Square(kingRow, kingCol + 2))) {
                 possibleSquares.remove(new Square(kingRow, kingCol + 2));
             }
-        }
-        else { //else, if isn't checked but one of side squares is threatened, castling to that side isn't possible:
+        } else { //else, if isn't checked but one of side squares is threatened, castling to that side isn't possible:
             if (possibleSquares.contains(new Square(kingRow, kingCol - 2))) {
                 if (!(possibleSquares.contains(new Square(kingRow, kingCol - 1)))) {
                     possibleSquares.remove(new Square(kingRow, kingCol - 2));
@@ -442,7 +441,7 @@ public class ChessProcessor {
         }
     }
 
-    public double negaMax(char color, Square fromSquare, Square toSquare, int depth, int n) {
+    public double negaMax(char color, int depth, int n, ArrayList<Move> possibleMoves) {
         if (depth == 0) {
             return evaluateChancesToWin(color, this.board);
         }
@@ -451,24 +450,17 @@ public class ChessProcessor {
         for (Move move : allMoves) {
             ChessProcessor chessProcessorRec = new ChessProcessor(this);
             chessProcessorRec.makeMove(move.getFromSquare(), move.getToSquare());
-            if (chessProcessorRec.evaluateChancesToWin(color, chessProcessorRec.getBoard()) < max) continue;
-            double score = (-1) * chessProcessorRec.negaMax(getRivalColor(color), fromSquare, toSquare, depth - 1, n);
+            if (chessProcessorRec.evaluateChancesToWin(color, chessProcessorRec.getBoard()) < max)
+                continue;
+            double score = (-1) * chessProcessorRec.negaMax(getRivalColor(color), depth - 1, n, possibleMoves);
             if (score == max && depth == n) {
-                int rnd = ThreadLocalRandom.current().nextInt(1, 2+1);
-                if (rnd == 1) {
-                    fromSquare.setRow(move.getFromSquare().getRow());
-                    fromSquare.setCol(move.getFromSquare().getCol());
-                    toSquare.setRow(move.getToSquare().getRow());
-                    toSquare.setCol(move.getToSquare().getCol());
-                }
+                possibleMoves.add(move);
             }
             if (score > max) {
                 max = score;
                 if (depth == n) { //changing fromSquare&toSquare only in the outer layer of the recursion
-                    fromSquare.setRow(move.getFromSquare().getRow());
-                    fromSquare.setCol(move.getFromSquare().getCol());
-                    toSquare.setRow(move.getToSquare().getRow());
-                    toSquare.setCol(move.getToSquare().getCol());
+                    possibleMoves.clear();
+                    possibleMoves.add(move);
                 }
             }
         }
@@ -480,26 +472,130 @@ public class ChessProcessor {
     }
 
     public double evaluateChancesToWin(char color, String[][] board) {
-        double piecesValues = sumValueOfPieces(color, board) - sumValueOfPieces(getRivalColor(color), board);
-        double piecesMobility = getAllPossibleMoves(color, board).size() - getAllPossibleMoves(getRivalColor(color), board).size();
+        double material = sumValueOfPieces(color, board) - sumValueOfPieces(getRivalColor(color), board);
+        double piecesMobility = (getNumOfPieces(color, board) < 10 || getNumOfPieces(getRivalColor(color), board) < 10) ?
+                0 : getAllPossibleMoves(color, board).size() - getAllPossibleMoves(getRivalColor(color), board).size();
         double kingSafety = evaluateKingSafety(color, board) - evaluateKingSafety(getRivalColor(color), board);
-        double checkValue = isBeingChecked(getRivalColor(color), board)? 1000 : 0;
-        double ownCheckValue = isBeingChecked(color, board)? - 1000 : 0;
-        double mateValue = isMated(getRivalColor(color), board)? Double.POSITIVE_INFINITY : 0;
-        double ownMateValue = isMated(color, board)? Double.NEGATIVE_INFINITY : 0;
+        double pawnsScore = evaluatePawnsScore(color, board) - evaluatePawnsScore(getRivalColor(color), board);
+        double checkValue;
+        double ownCheckValue;
+        if (getNumOfPieces(getRivalColor(color), board) < 10) {
+            checkValue = isBeingChecked(getRivalColor(color), board) ? 3000 : 0;
+            ownCheckValue = isBeingChecked(color, board) ? -3000 : 0;
+        } else {
+            checkValue = isBeingChecked(getRivalColor(color), board) ? 500 : 0;
+            ownCheckValue = isBeingChecked(color, board) ? -500 : 0;
+        }
+        double mateValue = isMated(getRivalColor(color), board) ? Double.POSITIVE_INFINITY : 0;
+        double ownMateValue = isMated(color, board) ? Double.NEGATIVE_INFINITY : 0;
         double piecesDeveloping = piecesDeveloping(color, board) - piecesDeveloping(getRivalColor(color), board);
-        //TODO continue
-        return piecesValues*2000 + checkValue + ownCheckValue + mateValue + ownMateValue + 1000*piecesDeveloping;
+        return 2000 * material + checkValue + ownCheckValue + mateValue + ownMateValue + 100*piecesDeveloping + 0.2*piecesMobility + kingSafety + 10*pawnsScore;
+    }
+
+    private double evaluatePawnsScore(char color, String[][] board) {
+        double score = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (board[i][j].equals(color + "p")) {
+                    Pawn pawn = (Pawn) getChessPieceBySquare(i, j);
+                    if (pawn.getIsBottom() == 1)
+                        score += evaluateBottomPawnScore(color, board, i, j);
+                    else score += evaluateUpperPawnScore(color, board, i, j);
+                }
+            }
+        }
+        return score;
+    }
+
+    private double evaluateBottomPawnScore(char color, String[][] board, int row, int col) {
+        double score = 0;
+        if (row - 1 >= 0) {
+            if (col - 1 >= 0) {
+                if (board[row - 1][col - 1].charAt(0) == color) score += 10;
+            }
+            if (col + 1 < 8) {
+                if (board[row - 1][col + 1].charAt(0) == color) score += 10;
+            }
+            if (!(board[row - 1][col].equals("_"))) score -= 20;
+        }
+        //bonus for possible passed pawns:
+        boolean emptyLineAhead = true;
+        char rivalColor = getRivalColor(color);
+        for (int i = row - 2; i >= 0; i--) {
+            if (board[i][col].charAt(0) == color) {
+                score -= 5;
+                emptyLineAhead = false;
+                break;
+            }
+            if (board[i][col].charAt(0) == rivalColor) {
+                emptyLineAhead = false;
+                break;
+            }
+        }
+
+        if (emptyLineAhead) {
+            score += (7 - row);
+        }
+
+        return score;
+    }
+
+    private double evaluateUpperPawnScore(char color, String[][] board, int row, int col){
+        double score = 0;
+        //bonus for diagonal pawns, penalty for double pawns.
+        if (row + 1 < 8) {
+            if (col - 1 >= 0) {
+                if (board[row + 1][col - 1].charAt(0) == color) score += 10;
+            }
+            if (col + 1 < 8) {
+                if (board[row + 1][col + 1].charAt(0) == color) score += 10;
+            }
+            if (!(board[row + 1][col].equals("_"))) score -= 20;
+        }
+        //bonus for possible passed pawns:
+        boolean emptyLineAhead = true;
+        char rivalColor = getRivalColor(color);
+        for (int i = row + 2; i < 8; i++) {
+            if (board[i][col].charAt(0) == color) {
+                score -= 5;
+                emptyLineAhead = false;
+                break;
+            }
+            if (board[i][col].charAt(0) == rivalColor) {
+                emptyLineAhead = false;
+                break;
+            }
+        }
+
+        if (emptyLineAhead) {
+            score += (row);
+        }
+
+        return score;
     }
 
     private double piecesDeveloping(char color, String[][] board) {
-        double sumOfPiecesInMidBoard = 0;
-        for (int i = 2; i < 6; i++) {
+        if (getNumOfPieces(color, board) < 10 || getNumOfPieces(getRivalColor(color), board) < 10)
+            return 0;
+        double developingScore = 0;
+        for (int i = 3; i < 5; i++) {
             for (int j = 0; j < 8; j++) {
-                if (board[i][j].charAt(0) == color) sumOfPiecesInMidBoard += 1;
+                if (board[i][j].charAt(0) == color) developingScore++;
             }
         }
-        return sumOfPiecesInMidBoard * 300;
+        return developingScore;
+    }
+
+    private int getNumOfPieces(char color, String[][] board) {
+        int numOfPieces = 0;
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                if (board[i][j].charAt(0) == color) {
+                    numOfPieces++;
+                }
+            }
+        }
+        return numOfPieces;
     }
 
     private double sumValueOfPieces(char color, String[][] board) {
@@ -516,7 +612,7 @@ public class ChessProcessor {
 
     private double getPieceValue(char pieceType) {
         double value = 0;
-        switch(pieceType) {
+        switch (pieceType) {
             case 'r':
                 value = 5;
                 break;
@@ -538,6 +634,8 @@ public class ChessProcessor {
     }
 
     private double evaluateKingSafety(char color, String[][] board) {
+        if (getNumOfPieces(color, board) < 10 || getNumOfPieces(getRivalColor(color), board) < 10)
+            return 0;
         double safety = 0;
         int kingRow = 0, kingCol = 0;
         for (int i = 0; i < 8; i++) {
@@ -550,28 +648,27 @@ public class ChessProcessor {
             }
         }
 /*        int fromRowIndex = Math.max(0, kingRow - 3);
-        int fromColIndex = Math.max(0, kingCol - 3);
         int toRowIndex = Math.min(7, kingRow + 3);
-        int toColIndex = Math.min(7, kingCol + 3);
+        int fromColIndex = Math.max(0, kingCol - 2);
+        int toColIndex = Math.min(7, kingCol + 2);
         for (int i = fromRowIndex; i <= toRowIndex; i++) {
             for (int j = fromColIndex; j <= toColIndex; j++) {
-                if (board[i][j].equals(color + "p")) safety++;
+                if (board[i][j].charAt(0) == color) safety++;
             }
         }
         for (int i = fromRowIndex; i <= toRowIndex; i++) {
-            for (int j = fromColIndex; j <= toColIndex; j++) {
-                if (board[i][j].charAt(0) != color) safety-=2;
+            for (int j = 0; j < 8; j++) {
+                if (board[i][j].charAt(0) != color) safety -= 2;
             }
         }*/
         if (kingCol < 2 || kingCol > 5) {
-            safety += 50;
+            safety += 5;
         }
-
         return safety;
     }
 
     private char getRivalColor(char color) {
-        return color == 'w'? 'b' : 'w';
+        return color == 'w' ? 'b' : 'w';
     }
 
     public ArrayList<Move> getAllPossibleMoves(char color, String[][] board) {
